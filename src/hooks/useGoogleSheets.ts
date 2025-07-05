@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { TownshipProfile } from './useTownshipProfiles';
+import { LocalProfile } from './useLocalProfiles';
 import { ServiceProvider } from '../types';
 
 const SPREADSHEET_ID = '1paLi0tiSOHucsR4Ma_yrZgeoxVVKvluxjBH-ScDNjUc';
-const TOWNSHIP_SHEET_NAME = 'Township Profiles';
+const LOCAL_SHEET_NAME = 'Local Profiles';
 const PROVIDERS_SHEET_NAME = 'Service Providers';
 
 export function useGoogleSheets() {
@@ -78,7 +78,7 @@ export function useGoogleSheets() {
     }
   };
 
-  const syncTownshipProfileToSheets = async (profile: TownshipProfile): Promise<boolean> => {
+  const syncLocalProfileToSheets = async (profile: LocalProfile): Promise<boolean> => {
     setLoading(true);
     setError(null);
 
@@ -91,7 +91,7 @@ export function useGoogleSheets() {
         'Created At', 'Profile Image'
       ];
 
-      await ensureSheetExists(TOWNSHIP_SHEET_NAME, headers);
+      await ensureSheetExists(LOCAL_SHEET_NAME, headers);
 
       const values = [
         profile.id,
@@ -111,7 +111,7 @@ export function useGoogleSheets() {
       // Check if profile already exists
       const existingData = await window.gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${TOWNSHIP_SHEET_NAME}!A:A`,
+        range: `${LOCAL_SHEET_NAME}!A:A`,
       });
 
       const existingIds = existingData.result.values?.slice(1).map((row: any) => row[0]) || [];
@@ -122,7 +122,7 @@ export function useGoogleSheets() {
         const rowNumber = existingIndex + 2; // +1 for header, +1 for 0-based index
         await window.gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `${TOWNSHIP_SHEET_NAME}!A${rowNumber}:${String.fromCharCode(64 + headers.length)}${rowNumber}`,
+          range: `${LOCAL_SHEET_NAME}!A${rowNumber}:${String.fromCharCode(64 + headers.length)}${rowNumber}`,
           valueInputOption: 'RAW',
           resource: {
             values: [values]
@@ -132,7 +132,7 @@ export function useGoogleSheets() {
         // Append new row
         await window.gapi.client.sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEET_ID,
-          range: `${TOWNSHIP_SHEET_NAME}!A:${String.fromCharCode(64 + headers.length)}`,
+          range: `${LOCAL_SHEET_NAME}!A:${String.fromCharCode(64 + headers.length)}`,
           valueInputOption: 'RAW',
           insertDataOption: 'INSERT_ROWS',
           resource: {
@@ -230,14 +230,14 @@ export function useGoogleSheets() {
     }
   };
 
-  const batchSyncTownshipProfiles = async (profiles: TownshipProfile[]): Promise<number> => {
+  const batchSyncLocalProfiles = async (profiles: LocalProfile[]): Promise<number> => {
     setLoading(true);
     setError(null);
     let successCount = 0;
 
     try {
       for (const profile of profiles) {
-        const success = await syncTownshipProfileToSheets(profile);
+        const success = await syncLocalProfileToSheets(profile);
         if (success) successCount++;
       }
     } catch (err) {
@@ -271,9 +271,9 @@ export function useGoogleSheets() {
   };
 
   return {
-    syncTownshipProfileToSheets,
+    syncLocalProfileToSheets,
     syncServiceProviderToSheets,
-    batchSyncTownshipProfiles,
+    batchSyncLocalProfiles,
     batchSyncServiceProviders,
     loading,
     error

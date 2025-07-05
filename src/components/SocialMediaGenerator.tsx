@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Share2, Instagram, Facebook, Twitter, Copy, Download, Sparkles, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { useSocialMediaAI } from '../hooks/useSocialMediaAI';
 import { useServiceProviders } from '../hooks/useServiceProviders';
-import { useTownshipProfiles } from '../hooks/useTownshipProfiles';
+import { useLocalProfiles } from '../hooks/useLocalProfiles';
 
 interface SocialPost {
   platform: 'instagram' | 'facebook' | 'twitter';
@@ -20,12 +20,12 @@ export function SocialMediaGenerator() {
   
   const { generateSocialPost, loading } = useSocialMediaAI();
   const { providers } = useServiceProviders();
-  const { profiles } = useTownshipProfiles();
+  const { profiles } = useLocalProfiles();
 
   // Combine all providers for selection
   const allProviders = [
     ...providers.map(p => ({ id: p.id, name: p.fullName, service: p.service, type: 'advanced' })),
-    ...profiles.map(p => ({ id: p.id, name: p.fullName, service: p.skill, type: 'township' }))
+    ...profiles.map(p => ({ id: p.id, name: p.fullName, service: p.skill, type: 'local' }))
   ];
 
   const platforms = [

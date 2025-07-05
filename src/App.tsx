@@ -5,14 +5,14 @@ import { ProfileForm } from './components/ProfileForm';
 import { ManageProfiles } from './components/ManageProfiles';
 import { Analytics } from './components/Analytics';
 import { FindServices } from './components/FindServices';
-import { TownshipProfilesTable } from './components/TownshipProfilesTable';
+import { LocalProfilesTable } from './components/LocalProfilesTable';
 import { SocialMediaGenerator } from './components/SocialMediaGenerator';
 import { useServiceProviders } from './hooks/useServiceProviders';
 import { useAuth } from './hooks/useAuth';
 import { FormData } from './types';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics' | 'find' | 'township' | 'social'>('find');
+  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social'>('find');
   const { providers, loading, updateProvider, deleteProvider, generateProfile } = useServiceProviders();
   const { isLoading: authLoading } = useAuth();
 
@@ -35,8 +35,8 @@ function App() {
             onDelete={deleteProvider}
           />
         );
-      case 'township':
-        return <TownshipProfilesTable />;
+      case 'local':
+        return <LocalProfilesTable />;
       case 'social':
         return <SocialMediaGenerator />;
       case 'analytics':

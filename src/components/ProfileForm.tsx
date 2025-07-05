@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { User, Briefcase, Calendar, MapPin, Sparkles, Phone, Mail, MessageCircle, Globe, Building, Camera, Star, Plus, X } from 'lucide-react';
+import { User, Briefcase, Calendar, MapPin, Sparkles, Phone, Mail, MessageCircle, Globe, Building, Camera, Star, Plus, X, Clock } from 'lucide-react';
 import { FormData } from '../types';
-import { TownshipProfileForm } from './TownshipProfileForm';
+import { LocalProfileForm } from './LocalProfileForm';
 
 interface ProfileFormProps {
   onSubmit: (data: FormData) => void;
@@ -24,8 +24,16 @@ interface ProfileImage {
   caption: string;
 }
 
+interface CustomTimeSlot {
+  id: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  available: boolean;
+}
+
 export function ProfileForm({ onSubmit, loading }: ProfileFormProps) {
-  const [profileType, setProfileType] = useState<'township' | 'advanced'>('township');
+  const [profileType, setProfileType] = useState<'local' | 'advanced'>('local');
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     service: '',
@@ -55,9 +63,10 @@ export function ProfileForm({ onSubmit, loading }: ProfileFormProps) {
     }
   });
 
-  // New state for images and reviews
+  // New state for images, reviews, and custom availability
   const [profileImages, setProfileImages] = useState<ProfileImage[]>([]);
   const [customerReviews, setCustomerReviews] = useState<Review[]>([]);
+  const [customTimeSlots, setCustomTimeSlots] = useState<CustomTimeSlot[]>([]);
   const [newReview, setNewReview] = useState({
     clientName: '',
     rating: 5,
@@ -73,17 +82,20 @@ export function ProfileForm({ onSubmit, loading }: ProfileFormProps) {
     'Mechanic', 'Tailoring'
   ];
 
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Include images and reviews in the form data
+    // Include images, reviews, and custom availability in the form data
     const enhancedFormData = {
       ...formData,
       profileImages: profileImages.map(img => ({
         preview: img.preview,
         caption: img.caption
       })),
-      customerReviews
+      customerReviews,
+      customAvailability: customTimeSlots
     };
     
     onSubmit(enhancedFormData);
@@ -105,6 +117,44 @@ export function ProfileForm({ onSubmit, loading }: ProfileFormProps) {
       ...prev,
       businessInfo: { ...prev.businessInfo!, [field]: value }
     }));
+  };
+
+  const handleOperatingHoursChange = (day: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      businessInfo: {
+        ...prev.businessInfo!,
+        operatingHours: {
+          ...prev.businessInfo!.operatingHours,
+          [day]: {
+            ...prev.businessInfo!.operatingHours[day],
+            [field]: value
+          }
+        }
+      }
+    }));
+  };
+
+  // Custom time slot functions
+  const addCustomTimeSlot = () => {
+    const newSlot: CustomTimeSlot = {
+      id: Date.now().toString(),
+      day: 'Monday',
+      startTime: '09:00',
+      endTime: '17:00',
+      available: true
+    };
+    setCustomTimeSlots(prev => [...prev, newSlot]);
+  };
+
+  const updateCustomTimeSlot = (id: string, field: string, value: any) => {
+    setCustomTimeSlots(prev => prev.map(slot =>
+      slot.id === id ? { ...slot, [field]: value } : slot
+    ));
+  };
+
+  const removeCustomTimeSlot = (id: string) => {
+    setCustomTimeSlots(prev => prev.filter(slot => slot.id !== id));
   };
 
   // Image handling functions
@@ -191,28 +241,28 @@ export function ProfileForm({ onSubmit, loading }: ProfileFormProps) {
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Profile Type</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <button
-            onClick={() => setProfileType('township')}
+            onClick={() => setProfileType('local')}
             className={`p-8 rounded-2xl border-2 transition-all text-left group hover:shadow-lg ${
-              profileType === 'township'
+              profileType === 'local'
                 ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-lg'
                 : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
             }`}
           >
             <div className="flex items-center space-x-4 mb-4">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
-                profileType === 'township' 
+                profileType === 'local' 
                   ? 'bg-blue-500 shadow-lg' 
                   : 'bg-blue-100 group-hover:bg-blue-200'
               }`}>
-                <User className={`w-7 h-7 ${profileType === 'township' ? 'text-white' : 'text-blue-600'}`} />
+                <User className={`w-7 h-7 ${profileType === 'local' ? 'text-white' : 'text-blue-600'}`} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Township Service Provider</h3>
+                <h3 className="text-lg font-bold text-gray-900">Local Service Provider</h3>
                 <p className="text-sm text-gray-600">Quick and simple form</p>
               </div>
             </div>
             <p className="text-gray-600 leading-relaxed">
-              Perfect for individual service providers in townships. Simple form with essential fields only.
+              Perfect for individual service providers in local communities. Simple form with essential fields only.
             </p>
           </button>
 
@@ -238,15 +288,15 @@ export function ProfileForm({ onSubmit, loading }: ProfileFormProps) {
               </div>
             </div>
             <p className="text-gray-600 leading-relaxed">
-              Comprehensive form with business information, portfolio images, customer reviews, and advanced features.
+              Comprehensive form with business information, portfolio images, customer reviews, custom availability, and advanced features.
             </p>
           </button>
         </div>
       </div>
 
       {/* Render Selected Form */}
-      {profileType === 'township' ? (
-        <TownshipProfileForm />
+      {profileType === 'local' ? (
+        <LocalProfileForm />
       ) : (
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
           <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 px-8 py-10">
@@ -612,6 +662,115 @@ export function ProfileForm({ onSubmit, loading }: ProfileFormProps) {
                       className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-lg"
                       placeholder="Describe your business and what makes it unique..."
                     />
+                  </div>
+
+                  {/* Operating Hours */}
+                  <div className="space-y-6">
+                    <div className="flex items-center space-x-3 pb-4 border-b border-gray-200">
+                      <Clock className="w-5 h-5 text-blue-600" />
+                      <h4 className="text-lg font-bold text-gray-900">Operating Hours</h4>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {daysOfWeek.map(day => (
+                        <div key={day} className="flex items-center space-x-4 p-4 bg-white rounded-xl border border-gray-200">
+                          <div className="w-24">
+                            <label className="text-sm font-medium text-gray-700">{day}</label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={!formData.businessInfo?.operatingHours[day.toLowerCase()]?.closed}
+                              onChange={(e) => handleOperatingHoursChange(day.toLowerCase(), 'closed', !e.target.checked)}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-600">Open</span>
+                          </div>
+                          {!formData.businessInfo?.operatingHours[day.toLowerCase()]?.closed && (
+                            <>
+                              <input
+                                type="time"
+                                value={formData.businessInfo?.operatingHours[day.toLowerCase()]?.open || '09:00'}
+                                onChange={(e) => handleOperatingHoursChange(day.toLowerCase(), 'open', e.target.value)}
+                                className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                              <span className="text-gray-500">to</span>
+                              <input
+                                type="time"
+                                value={formData.businessInfo?.operatingHours[day.toLowerCase()]?.close || '17:00'}
+                                onChange={(e) => handleOperatingHoursChange(day.toLowerCase(), 'close', e.target.value)}
+                                className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Availability */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+                      <div className="flex items-center space-x-3">
+                        <Clock className="w-5 h-5 text-purple-600" />
+                        <h4 className="text-lg font-bold text-gray-900">Custom Availability</h4>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addCustomTimeSlot}
+                        className="flex items-center space-x-2 bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Add Time Slot</span>
+                      </button>
+                    </div>
+                    
+                    {customTimeSlots.length > 0 && (
+                      <div className="space-y-4">
+                        {customTimeSlots.map(slot => (
+                          <div key={slot.id} className="flex items-center space-x-4 p-4 bg-white rounded-xl border border-gray-200">
+                            <select
+                              value={slot.day}
+                              onChange={(e) => updateCustomTimeSlot(slot.id, 'day', e.target.value)}
+                              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            >
+                              {daysOfWeek.map(day => (
+                                <option key={day} value={day}>{day}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="time"
+                              value={slot.startTime}
+                              onChange={(e) => updateCustomTimeSlot(slot.id, 'startTime', e.target.value)}
+                              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            />
+                            <span className="text-gray-500">to</span>
+                            <input
+                              type="time"
+                              value={slot.endTime}
+                              onChange={(e) => updateCustomTimeSlot(slot.id, 'endTime', e.target.value)}
+                              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            />
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={slot.available}
+                                onChange={(e) => updateCustomTimeSlot(slot.id, 'available', e.target.checked)}
+                                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                              />
+                              <span className="text-sm text-gray-600">Available</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeCustomTimeSlot(slot.id)}
+                              className="text-red-500 hover:text-red-700 p-1"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

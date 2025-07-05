@@ -2,8 +2,8 @@ import React from 'react';
 import { PlusCircle, Users, BarChart, Search, Database, Share2 } from 'lucide-react';
 
 interface NavigationProps {
-  activeTab: 'create' | 'manage' | 'analytics' | 'find' | 'township' | 'social';
-  onTabChange: (tab: 'create' | 'manage' | 'analytics' | 'find' | 'township' | 'social') => void;
+  activeTab: 'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social';
+  onTabChange: (tab: 'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social') => void;
 }
 
 export function Navigation({ activeTab, onTabChange }: NavigationProps) {
@@ -11,7 +11,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
     { id: 'find', label: 'Find Services', icon: Search },
     { id: 'create', label: 'Create Profile', icon: PlusCircle },
     { id: 'manage', label: 'Manage Profiles', icon: Users },
-    { id: 'township', label: 'Township Profiles', icon: Database },
+    { id: 'local', label: 'Local Profiles', icon: Database },
     { id: 'social', label: 'Social Media', icon: Share2 },
     { id: 'analytics', label: 'Analytics', icon: BarChart }
   ];
