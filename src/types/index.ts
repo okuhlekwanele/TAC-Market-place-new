@@ -18,6 +18,7 @@ export interface ServiceProvider {
   availability?: TimeSlot[];
   profileImages?: ProfileImage[];
   customerReviews?: CustomerReview[];
+  customAvailability?: CustomTimeSlot[];
 }
 
 export interface ContactDetails {
@@ -60,6 +61,14 @@ export interface TimeSlot {
   available: boolean;
 }
 
+export interface CustomTimeSlot {
+  id: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  available: boolean;
+}
+
 export interface Appointment {
   id: string;
   providerId: string;
@@ -85,6 +94,7 @@ export interface FormData {
   businessInfo?: BusinessInfo;
   profileImages?: ProfileImage[];
   customerReviews?: CustomerReview[];
+  customAvailability?: CustomTimeSlot[];
 }
 
 export interface User {
