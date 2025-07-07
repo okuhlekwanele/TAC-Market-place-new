@@ -12,6 +12,7 @@ interface LocalFormData {
   profileImage?: File;
   portfolioImages?: File[];
   customerReviews?: Review[];
+  flexibleHours?: FlexibleHour[];
 }
 
 interface Review {
@@ -30,6 +31,14 @@ interface PortfolioImage {
   caption: string;
 }
 
+interface FlexibleHour {
+  id: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  available: boolean;
+}
+
 export function LocalProfileForm() {
   const [formData, setFormData] = useState<LocalFormData>({
     fullName: '',
@@ -37,13 +46,15 @@ export function LocalProfileForm() {
     yearsExperience: 0,
     location: '',
     contact: '',
-    availability: ''
+    availability: '',
+    flexibleHours: []
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImagePreview, setProfileImagePreview] = useState<string>('');
   const [portfolioImages, setPortfolioImages] = useState<PortfolioImage[]>([]);
   const [customerReviews, setCustomerReviews] = useState<Review[]>([]);
+  const [flexibleHours, setFlexibleHours] = useState<FlexibleHour[]>([]);
   const [newReview, setNewReview] = useState({
     clientName: '',
     rating: 5,
@@ -53,7 +64,7 @@ export function LocalProfileForm() {
   });
   const [googleSheetsError, setGoogleSheetsError] = useState<string>('');
   
-  const { submitProfile, connectToGoogleSheets, isSignedIn, isGoogleSheetsAvailable } = useLocalProfiles();
+  const { submitProfile, connectToGoogleSheets, isSignedIn } = useLocalProfiles();
 
   const skills = [
     'Hairdressing',
@@ -72,11 +83,28 @@ export function LocalProfileForm() {
   const availabilityOptions = [
     'Full-time',
     'Part-time', 
-    'Weekends only'
+    'Weekends only',
+    'Flexible hours (set custom schedule)'
   ];
+
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const handleInputChange = (field: keyof LocalFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // If availability is set to flexible hours, initialize flexible hours
+    if (field === 'availability' && value === 'Flexible hours (set custom schedule)') {
+      if (flexibleHours.length === 0) {
+        const defaultHours = daysOfWeek.map(day => ({
+          id: `${day}-${Date.now()}`,
+          day,
+          startTime: '09:00',
+          endTime: '17:00',
+          available: day !== 'Sunday'
+        }));
+        setFlexibleHours(defaultHours);
+      }
+    }
   };
 
   const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,6 +170,27 @@ export function LocalProfileForm() {
     setCustomerReviews(prev => prev.filter(review => review.id !== reviewId));
   };
 
+  const updateFlexibleHour = (id: string, field: keyof FlexibleHour, value: any) => {
+    setFlexibleHours(prev => prev.map(hour =>
+      hour.id === id ? { ...hour, [field]: value } : hour
+    ));
+  };
+
+  const addCustomTimeSlot = () => {
+    const newSlot: FlexibleHour = {
+      id: `custom-${Date.now()}`,
+      day: 'Monday',
+      startTime: '09:00',
+      endTime: '17:00',
+      available: true
+    };
+    setFlexibleHours(prev => [...prev, newSlot]);
+  };
+
+  const removeFlexibleHour = (id: string) => {
+    setFlexibleHours(prev => prev.filter(hour => hour.id !== id));
+  };
+
   const renderStars = (rating: number, interactive = false, onRatingChange?: (rating: number) => void) => {
     return (
       <div className="flex space-x-1">
@@ -184,7 +233,8 @@ export function LocalProfileForm() {
       const enhancedFormData = {
         ...formData,
         portfolioImages: portfolioImages.map(img => img.file),
-        customerReviews
+        customerReviews,
+        flexibleHours: formData.availability === 'Flexible hours (set custom schedule)' ? flexibleHours : []
       };
       
       await submitProfile(enhancedFormData);
@@ -208,7 +258,7 @@ export function LocalProfileForm() {
           <p className="text-gray-600 leading-relaxed mb-8 text-lg">
             We're creating your professional profile — you'll be notified when it's ready.
           </p>
-          {isGoogleSheetsAvailable && !isSignedIn && (
+          {!isSignedIn && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
               <div className="flex items-start space-x-3">
                 <Info className="w-5 h-5 text-blue-600 mt-0.5" />
@@ -239,11 +289,13 @@ export function LocalProfileForm() {
                 yearsExperience: 0,
                 location: '',
                 contact: '',
-                availability: ''
+                availability: '',
+                flexibleHours: []
               });
               setProfileImagePreview('');
               setPortfolioImages([]);
               setCustomerReviews([]);
+              setFlexibleHours([]);
               setGoogleSheetsError('');
             }}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-4 px-8 rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
@@ -270,7 +322,7 @@ export function LocalProfileForm() {
         </div>
 
         {/* Google Sheets Connection Info */}
-        {isGoogleSheetsAvailable && !isSignedIn && (
+        {!isSignedIn && (
           <div className="mx-8 mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
             <div className="flex items-start space-x-3">
               <Info className="w-5 h-5 text-blue-600 mt-0.5" />
@@ -288,21 +340,6 @@ export function LocalProfileForm() {
                 {googleSheetsError && (
                   <p className="text-xs text-red-600 mt-2">{googleSheetsError}</p>
                 )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Google Sheets Not Available Info */}
-        {!isGoogleSheetsAvailable && (
-          <div className="mx-8 mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <div className="flex items-start space-x-3">
-              <Info className="w-5 h-5 text-gray-600 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm text-gray-800 font-medium">Local Storage Mode</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  Your profile will be saved locally on this device. Google Sheets sync is not available in this environment.
-                </p>
               </div>
             </div>
           </div>
@@ -437,6 +474,84 @@ export function LocalProfileForm() {
               </select>
             </div>
           </div>
+
+          {/* Flexible Hours Section */}
+          {formData.availability === 'Flexible hours (set custom schedule)' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <Clock className="w-5 h-5 text-purple-600" />
+                  <h3 className="text-lg font-bold text-gray-900">Set Your Schedule</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={addCustomTimeSlot}
+                  className="flex items-center space-x-2 bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Time Slot</span>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {flexibleHours.map(hour => (
+                  <div key={hour.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <select
+                      value={hour.day}
+                      onChange={(e) => updateFlexibleHour(hour.id, 'day', e.target.value)}
+                      className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                    >
+                      {daysOfWeek.map(day => (
+                        <option key={day} value={day}>{day}</option>
+                      ))}
+                    </select>
+                    
+                    <input
+                      type="time"
+                      value={hour.startTime}
+                      onChange={(e) => updateFlexibleHour(hour.id, 'startTime', e.target.value)}
+                      className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                    />
+                    
+                    <span className="text-gray-500 text-sm">to</span>
+                    
+                    <input
+                      type="time"
+                      value={hour.endTime}
+                      onChange={(e) => updateFlexibleHour(hour.id, 'endTime', e.target.value)}
+                      className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                    />
+                    
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={hour.available}
+                        onChange={(e) => updateFlexibleHour(hour.id, 'available', e.target.checked)}
+                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      />
+                      <span className="text-sm text-gray-600">Available</span>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      onClick={() => removeFlexibleHour(hour.id)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              
+              {flexibleHours.length === 0 && (
+                <div className="text-center py-8 bg-gray-50 rounded-xl">
+                  <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500">No time slots added yet</p>
+                  <p className="text-sm text-gray-400 mt-1">Click "Add Time Slot" to set your schedule</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Portfolio Images Section */}
           <div className="space-y-6">

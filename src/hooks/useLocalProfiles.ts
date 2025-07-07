@@ -15,6 +15,26 @@ export interface LocalProfile {
   bioAI: string;
   suggestedPriceZAR: number;
   createdAt: Date;
+  flexibleHours?: FlexibleHour[];
+  portfolioImages?: string[];
+  customerReviews?: Review[];
+}
+
+interface FlexibleHour {
+  id: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  available: boolean;
+}
+
+interface Review {
+  id: string;
+  clientName: string;
+  rating: number;
+  comment: string;
+  service: string;
+  date: string;
 }
 
 interface LocalFormData {
@@ -27,22 +47,14 @@ interface LocalFormData {
   profileImage?: File;
   portfolioImages?: File[];
   customerReviews?: Review[];
-}
-
-interface Review {
-  id: string;
-  clientName: string;
-  rating: number;
-  comment: string;
-  service: string;
-  date: string;
+  flexibleHours?: FlexibleHour[];
 }
 
 export function useLocalProfiles() {
   const [profiles, setProfiles] = useState<LocalProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const { generateProfileContent } = useGeminiAI();
-  const { syncLocalProfileToSheets, signIn, isSignedIn } = useGoogleSheets();
+  const { syncLocalProfileToSheets, signIn, isSignedIn, isGoogleSheetsConfigured } = useGoogleSheets();
 
   useEffect(() => {
     // Load profiles from localStorage
@@ -70,6 +82,15 @@ export function useLocalProfiles() {
       if (formData.profileImage) {
         profileImageBase64 = await convertFileToBase64(formData.profileImage);
       }
+
+      // Convert portfolio images to base64
+      const portfolioImageBase64: string[] = [];
+      if (formData.portfolioImages) {
+        for (const file of formData.portfolioImages) {
+          const base64 = await convertFileToBase64(file);
+          portfolioImageBase64.push(base64);
+        }
+      }
       
       const newProfile: LocalProfile = {
         id: Date.now().toString(),
@@ -83,7 +104,10 @@ export function useLocalProfiles() {
         status: 'Pending Bio',
         bioAI: '',
         suggestedPriceZAR: 0,
-        createdAt: new Date()
+        createdAt: new Date(),
+        flexibleHours: formData.flexibleHours || [],
+        portfolioImages: portfolioImageBase64,
+        customerReviews: formData.customerReviews || []
       };
       
       // Save profile first
@@ -92,10 +116,10 @@ export function useLocalProfiles() {
       
       // Try to sync to Google Sheets (gracefully handle auth failures)
       try {
-        if (!isSignedIn) {
-          console.log('User not signed in to Google, skipping Sheets sync');
-        } else {
+        if (isSignedIn) {
           await syncLocalProfileToSheets(newProfile);
+        } else {
+          console.log('User not signed in to Google, skipping Sheets sync');
         }
       } catch (sheetsError) {
         console.warn('Google Sheets sync failed, but profile was saved locally:', sheetsError);
@@ -218,7 +242,8 @@ export function useLocalProfiles() {
     deleteProfile,
     regenerateAIContent,
     connectToGoogleSheets,
-    isSignedIn
+    isSignedIn,
+    isGoogleSheetsAvailable: isGoogleSheetsConfigured()
   };
 }
 
