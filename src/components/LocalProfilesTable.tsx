@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Search, Filter, Eye, Edit3, Trash2, User, Phone, MapPin, Clock, Award, RefreshCw, ExternalLink, Upload, Settings } from 'lucide-react';
+import { Search, Filter, Eye, Edit3, Trash2, User, Phone, MapPin, Clock, Award, RefreshCw, ExternalLink, Upload, Settings, AlertCircle } from 'lucide-react';
 import { useLocalProfiles, LocalProfile } from '../hooks/useLocalProfiles';
 import { useGoogleSheets } from '../hooks/useGoogleSheets';
 
 export function LocalProfilesTable() {
   const { profiles, updateProfile, deleteProfile, regenerateAIContent, loading } = useLocalProfiles();
-  const { batchSyncLocalProfiles, setupAllSheets, signIn, isSignedIn, loading: sheetsLoading } = useGoogleSheets();
+  const { batchSyncLocalProfiles, setupAllSheets, signIn, isSignedIn, loading: sheetsLoading, error: sheetsError } = useGoogleSheets();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedProfile, setSelectedProfile] = useState<LocalProfile | null>(null);
+  const [showErrorDetails, setShowErrorDetails] = useState(false);
 
   const filteredProfiles = profiles.filter(profile => {
     const matchesSearch = profile.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,31 +40,47 @@ export function LocalProfilesTable() {
     if (!isSignedIn) {
       try {
         await signIn();
-      } catch (error) {
-        alert('Please sign in to Google to sync profiles to Google Sheets.');
+      } catch (error: any) {
+        alert(`Google Sign-in Error: ${error.message}`);
         return;
       }
     }
 
-    const successCount = await batchSyncLocalProfiles(profiles);
-    alert(`Successfully synced ${successCount} out of ${profiles.length} profiles to Google Sheets`);
+    try {
+      const successCount = await batchSyncLocalProfiles(profiles);
+      alert(`Successfully synced ${successCount} out of ${profiles.length} profiles to Google Sheets`);
+    } catch (error: any) {
+      alert(`Sync Error: ${error.message}`);
+    }
   };
 
   const handleSetupSheets = async () => {
     if (!isSignedIn) {
       try {
         await signIn();
-      } catch (error) {
-        alert('Please sign in to Google to setup Google Sheets.');
+      } catch (error: any) {
+        alert(`Google Sign-in Error: ${error.message}`);
         return;
       }
     }
 
-    const success = await setupAllSheets();
-    if (success) {
-      alert('Google Sheets have been set up successfully with all necessary columns!');
-    } else {
-      alert('Failed to setup Google Sheets. Please try again.');
+    try {
+      const success = await setupAllSheets();
+      if (success) {
+        alert('Google Sheets have been set up successfully with all necessary columns!');
+      } else {
+        alert(`Failed to setup Google Sheets: ${sheetsError || 'Unknown error occurred'}`);
+      }
+    } catch (error: any) {
+      alert(`Setup Error: ${error.message}`);
+    }
+  };
+
+  const handleSignIn = async () => {
+    try {
+      await signIn();
+    } catch (error: any) {
+      alert(`Google Sign-in Error: ${error.message}`);
     }
   };
 
@@ -78,16 +95,41 @@ export function LocalProfilesTable() {
             {isSignedIn && (
               <p className="text-green-600 text-sm mt-1">✓ Connected to Google Sheets</p>
             )}
+            {sheetsError && (
+              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start space-x-2">
+                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-red-800 text-sm font-medium">Google Sheets Error</p>
+                    <p className="text-red-700 text-sm mt-1">
+                      {sheetsError.length > 100 && !showErrorDetails 
+                        ? `${sheetsError.substring(0, 100)}...` 
+                        : sheetsError
+                      }
+                    </p>
+                    {sheetsError.length > 100 && (
+                      <button
+                        onClick={() => setShowErrorDetails(!showErrorDetails)}
+                        className="text-red-600 text-sm underline mt-1 hover:text-red-800"
+                      >
+                        {showErrorDetails ? 'Show less' : 'Show more details'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center space-x-4">
             {!isSignedIn && (
               <button
-                onClick={signIn}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                onClick={handleSignIn}
+                disabled={sheetsLoading}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <User className="w-4 h-4" />
-                <span>Sign in to Google</span>
+                <span>{sheetsLoading ? 'Signing in...' : 'Sign in to Google'}</span>
               </button>
             )}
             

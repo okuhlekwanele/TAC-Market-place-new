@@ -22,7 +22,7 @@ export function useGoogleSheets() {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     
     if (!apiKey || !clientId) {
-      throw new Error('Google API key or Client ID not found. Please check your environment variables.');
+      throw new Error('Google API credentials are not configured. Please check your environment variables.');
     }
 
     // Load Google API
@@ -31,7 +31,7 @@ export function useGoogleSheets() {
         const script = document.createElement('script');
         script.src = 'https://apis.google.com/js/api.js';
         script.onload = resolve;
-        script.onerror = reject;
+        script.onerror = () => reject(new Error('Failed to load Google API script'));
         document.head.appendChild(script);
       });
     }
@@ -42,7 +42,7 @@ export function useGoogleSheets() {
         const script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
         script.onload = resolve;
-        script.onerror = reject;
+        script.onerror = () => reject(new Error('Failed to load Google Identity Services script'));
         document.head.appendChild(script);
       });
     }
@@ -65,6 +65,7 @@ export function useGoogleSheets() {
 
   const signIn = async () => {
     try {
+      setError(null);
       await initializeGoogleSheetsAPI();
       const authInstance = window.gapi.auth2.getAuthInstance();
       
@@ -72,18 +73,41 @@ export function useGoogleSheets() {
         await authInstance.signIn();
         setIsSignedIn(true);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign-in error:', error);
-      throw new Error('Failed to sign in to Google. Please try again.');
+      
+      // Handle specific OAuth errors
+      if (error?.error === 'idpiframe_initialization_failed') {
+        const currentOrigin = window.location.origin;
+        throw new Error(
+          `OAuth Configuration Error: The current URL (${currentOrigin}) is not authorized for Google Sign-In. ` +
+          `Please add this URL to the authorized JavaScript origins in your Google Cloud Console at ` +
+          `https://console.developers.google.com/. Navigate to 'APIs & Services' > 'Credentials' and ` +
+          `add '${currentOrigin}' to the authorized origins list.`
+        );
+      } else if (error?.error === 'popup_blocked_by_browser') {
+        throw new Error('Sign-in popup was blocked by your browser. Please allow popups for this site and try again.');
+      } else if (error?.error === 'access_denied') {
+        throw new Error('Google Sign-in was cancelled or access was denied. Please try again and grant the necessary permissions.');
+      } else if (error?.message?.includes('API key')) {
+        throw new Error('Google API configuration error. Please check that your API key and Client ID are correctly set.');
+      } else {
+        throw new Error(`Failed to sign in to Google: ${error?.message || 'Unknown error occurred'}. Please check your internet connection and try again.`);
+      }
     }
   };
 
   const ensureAuthenticated = async () => {
-    await initializeGoogleSheetsAPI();
-    const authInstance = window.gapi.auth2.getAuthInstance();
-    
-    if (!authInstance.isSignedIn.get()) {
-      await signIn();
+    try {
+      await initializeGoogleSheetsAPI();
+      const authInstance = window.gapi.auth2.getAuthInstance();
+      
+      if (!authInstance.isSignedIn.get()) {
+        await signIn();
+      }
+    } catch (error) {
+      // Re-throw the error to be handled by the calling function
+      throw error;
     }
   };
 
@@ -157,6 +181,8 @@ export function useGoogleSheets() {
 
   const setupAllSheets = async () => {
     try {
+      setError(null);
+      
       // Local Profiles Sheet
       const localProfileHeaders = [
         'ID', 'Full Name', 'Skill', 'Years Experience', 'Location', 
@@ -193,8 +219,9 @@ export function useGoogleSheets() {
       await ensureSheetExists(ANALYTICS_SHEET_NAME, analyticsHeaders);
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error setting up sheets:', error);
+      setError(error?.message || 'Failed to setup Google Sheets');
       return false;
     }
   };
@@ -263,9 +290,9 @@ export function useGoogleSheets() {
       }
 
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Google Sheets sync error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to sync to Google Sheets. Please ensure you are signed in to Google.');
+      setError(err?.message || 'Failed to sync to Google Sheets. Please ensure you are signed in to Google.');
       return false;
     } finally {
       setLoading(false);
@@ -345,9 +372,9 @@ export function useGoogleSheets() {
       }
 
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Google Sheets sync error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to sync to Google Sheets. Please ensure you are signed in to Google.');
+      setError(err?.message || 'Failed to sync to Google Sheets. Please ensure you are signed in to Google.');
       return false;
     } finally {
       setLoading(false);
@@ -396,9 +423,9 @@ export function useGoogleSheets() {
       });
 
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Google Sheets sync error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to sync appointment to Google Sheets.');
+      setError(err?.message || 'Failed to sync appointment to Google Sheets.');
       return false;
     } finally {
       setLoading(false);
@@ -448,9 +475,9 @@ export function useGoogleSheets() {
       });
 
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Google Sheets analytics sync error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to sync analytics to Google Sheets.');
+      setError(err?.message || 'Failed to sync analytics to Google Sheets.');
       return false;
     } finally {
       setLoading(false);
@@ -467,9 +494,9 @@ export function useGoogleSheets() {
         const success = await syncLocalProfileToSheets(profile);
         if (success) successCount++;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Batch sync error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to batch sync profiles');
+      setError(err?.message || 'Failed to batch sync profiles');
     } finally {
       setLoading(false);
     }
@@ -487,9 +514,9 @@ export function useGoogleSheets() {
         const success = await syncServiceProviderToSheets(provider);
         if (success) successCount++;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Batch sync error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to batch sync providers');
+      setError(err?.message || 'Failed to batch sync providers');
     } finally {
       setLoading(false);
     }
