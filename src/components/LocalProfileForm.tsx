@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Briefcase, Calendar, MapPin, Phone, Clock, Camera, CheckCircle, Star, Plus, X, AlertCircle } from 'lucide-react';
+import { User, Briefcase, Calendar, MapPin, Phone, Clock, Camera, CheckCircle, Star, Plus, X, AlertCircle, Info } from 'lucide-react';
 import { useLocalProfiles } from '../hooks/useLocalProfiles';
 
 interface LocalFormData {
@@ -51,9 +51,9 @@ export function LocalProfileForm() {
     service: '',
     date: new Date().toISOString().split('T')[0]
   });
-  const [showGoogleSheetsInfo, setShowGoogleSheetsInfo] = useState(false);
+  const [googleSheetsError, setGoogleSheetsError] = useState<string>('');
   
-  const { submitProfile, connectToGoogleSheets, isSignedIn } = useLocalProfiles();
+  const { submitProfile, connectToGoogleSheets, isSignedIn, isGoogleSheetsAvailable } = useLocalProfiles();
 
   const skills = [
     'Hairdressing',
@@ -168,11 +168,11 @@ export function LocalProfileForm() {
 
   const handleGoogleSheetsConnect = async () => {
     try {
+      setGoogleSheetsError('');
       await connectToGoogleSheets();
-      setShowGoogleSheetsInfo(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to connect to Google Sheets:', error);
-      alert('Failed to connect to Google Sheets. You can still submit your profile - it will be saved locally.');
+      setGoogleSheetsError(error.message || 'Failed to connect to Google Sheets');
     }
   };
 
@@ -208,10 +208,10 @@ export function LocalProfileForm() {
           <p className="text-gray-600 leading-relaxed mb-8 text-lg">
             We're creating your professional profile — you'll be notified when it's ready.
           </p>
-          {!isSignedIn && (
+          {isGoogleSheetsAvailable && !isSignedIn && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
               <div className="flex items-start space-x-3">
-                <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+                <Info className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div className="text-left">
                   <p className="text-sm text-blue-800 font-medium">Optional: Connect to Google Sheets</p>
                   <p className="text-xs text-blue-600 mt-1">
@@ -223,6 +223,9 @@ export function LocalProfileForm() {
                   >
                     Connect Now
                   </button>
+                  {googleSheetsError && (
+                    <p className="text-xs text-red-600 mt-2">{googleSheetsError}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -241,6 +244,7 @@ export function LocalProfileForm() {
               setProfileImagePreview('');
               setPortfolioImages([]);
               setCustomerReviews([]);
+              setGoogleSheetsError('');
             }}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-4 px-8 rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
           >
@@ -266,10 +270,10 @@ export function LocalProfileForm() {
         </div>
 
         {/* Google Sheets Connection Info */}
-        {!isSignedIn && (
+        {isGoogleSheetsAvailable && !isSignedIn && (
           <div className="mx-8 mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
             <div className="flex items-start space-x-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+              <Info className="w-5 h-5 text-blue-600 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm text-blue-800 font-medium">Optional: Connect to Google Sheets</p>
                 <p className="text-xs text-blue-600 mt-1">
@@ -281,6 +285,24 @@ export function LocalProfileForm() {
                 >
                   Connect to Google Sheets
                 </button>
+                {googleSheetsError && (
+                  <p className="text-xs text-red-600 mt-2">{googleSheetsError}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Google Sheets Not Available Info */}
+        {!isGoogleSheetsAvailable && (
+          <div className="mx-8 mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <div className="flex items-start space-x-3">
+              <Info className="w-5 h-5 text-gray-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-gray-800 font-medium">Local Storage Mode</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Your profile will be saved locally on this device. Google Sheets sync is not available in this environment.
+                </p>
               </div>
             </div>
           </div>

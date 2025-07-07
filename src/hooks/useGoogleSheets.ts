@@ -17,12 +17,18 @@ export function useGoogleSheets() {
   const [error, setError] = useState<string | null>(null);
   const [isSignedIn, setIsSignedIn] = useState(false);
 
+  const isGoogleSheetsConfigured = () => {
+    const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    return !!(apiKey && clientId);
+  };
+
   const initializeGoogleSheetsAPI = async () => {
     const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     
     if (!apiKey || !clientId) {
-      throw new Error('Google API credentials are not configured. Please check your environment variables.');
+      throw new Error('Google Sheets integration is not configured. The application will work without it - your data will be saved locally.');
     }
 
     // Load Google API
@@ -66,6 +72,11 @@ export function useGoogleSheets() {
   const signIn = async () => {
     try {
       setError(null);
+      
+      if (!isGoogleSheetsConfigured()) {
+        throw new Error('Google Sheets integration is not configured. The application will work without it - your data will be saved locally.');
+      }
+
       await initializeGoogleSheetsAPI();
       const authInstance = window.gapi.auth2.getAuthInstance();
       
@@ -76,29 +87,32 @@ export function useGoogleSheets() {
     } catch (error: any) {
       console.error('Sign-in error:', error);
       
-      // Handle specific OAuth errors
+      // Handle specific OAuth errors with more user-friendly messages
       if (error?.error === 'idpiframe_initialization_failed') {
         const currentOrigin = window.location.origin;
         throw new Error(
-          `OAuth Configuration Error: The current URL (${currentOrigin}) is not authorized for Google Sign-In. ` +
-          `Please add this URL to the authorized JavaScript origins in your Google Cloud Console at ` +
-          `https://console.developers.google.com/. Navigate to 'APIs & Services' > 'Credentials' and ` +
-          `add '${currentOrigin}' to the authorized origins list.`
+          `Google Sheets integration is not available in this environment. ` +
+          `Your profile data will be saved locally and you can still use all features of the application. ` +
+          `To enable Google Sheets sync, the administrator needs to configure OAuth settings for this URL: ${currentOrigin}`
         );
       } else if (error?.error === 'popup_blocked_by_browser') {
         throw new Error('Sign-in popup was blocked by your browser. Please allow popups for this site and try again.');
       } else if (error?.error === 'access_denied') {
-        throw new Error('Google Sign-in was cancelled or access was denied. Please try again and grant the necessary permissions.');
-      } else if (error?.message?.includes('API key')) {
-        throw new Error('Google API configuration error. Please check that your API key and Client ID are correctly set.');
+        throw new Error('Google Sign-in was cancelled. You can still use the application - your data will be saved locally.');
+      } else if (error?.message?.includes('not configured')) {
+        throw new Error('Google Sheets integration is not configured. The application will work without it - your data will be saved locally.');
       } else {
-        throw new Error(`Failed to sign in to Google: ${error?.message || 'Unknown error occurred'}. Please check your internet connection and try again.`);
+        throw new Error(`Google Sheets sync is not available: ${error?.message || 'Configuration issue'}. Your data will be saved locally instead.`);
       }
     }
   };
 
   const ensureAuthenticated = async () => {
     try {
+      if (!isGoogleSheetsConfigured()) {
+        throw new Error('Google Sheets integration is not configured');
+      }
+
       await initializeGoogleSheetsAPI();
       const authInstance = window.gapi.auth2.getAuthInstance();
       
@@ -183,6 +197,11 @@ export function useGoogleSheets() {
     try {
       setError(null);
       
+      if (!isGoogleSheetsConfigured()) {
+        setError('Google Sheets integration is not configured. The application will work without it.');
+        return false;
+      }
+      
       // Local Profiles Sheet
       const localProfileHeaders = [
         'ID', 'Full Name', 'Skill', 'Years Experience', 'Location', 
@@ -221,7 +240,7 @@ export function useGoogleSheets() {
       return true;
     } catch (error: any) {
       console.error('Error setting up sheets:', error);
-      setError(error?.message || 'Failed to setup Google Sheets');
+      setError('Google Sheets sync is not available. Your data will be saved locally instead.');
       return false;
     }
   };
@@ -231,6 +250,11 @@ export function useGoogleSheets() {
     setError(null);
 
     try {
+      if (!isGoogleSheetsConfigured()) {
+        console.log('Google Sheets not configured, skipping sync');
+        return false;
+      }
+
       const headers = [
         'ID', 'Full Name', 'Skill', 'Years Experience', 'Location', 
         'Contact', 'Availability', 'Status', 'Bio (AI)', 'Suggested Price (ZAR)', 
@@ -292,7 +316,7 @@ export function useGoogleSheets() {
       return true;
     } catch (err: any) {
       console.error('Google Sheets sync error:', err);
-      setError(err?.message || 'Failed to sync to Google Sheets. Please ensure you are signed in to Google.');
+      setError('Google Sheets sync failed. Your data is saved locally.');
       return false;
     } finally {
       setLoading(false);
@@ -304,6 +328,11 @@ export function useGoogleSheets() {
     setError(null);
 
     try {
+      if (!isGoogleSheetsConfigured()) {
+        console.log('Google Sheets not configured, skipping sync');
+        return false;
+      }
+
       const headers = [
         'ID', 'Full Name', 'Service', 'Years Experience', 'Location', 
         'Phone', 'Email', 'WhatsApp', 'Website', 'Generated Bio', 
@@ -374,7 +403,7 @@ export function useGoogleSheets() {
       return true;
     } catch (err: any) {
       console.error('Google Sheets sync error:', err);
-      setError(err?.message || 'Failed to sync to Google Sheets. Please ensure you are signed in to Google.');
+      setError('Google Sheets sync failed. Your data is saved locally.');
       return false;
     } finally {
       setLoading(false);
@@ -386,6 +415,11 @@ export function useGoogleSheets() {
     setError(null);
 
     try {
+      if (!isGoogleSheetsConfigured()) {
+        console.log('Google Sheets not configured, skipping sync');
+        return false;
+      }
+
       const headers = [
         'ID', 'Provider ID', 'Provider Name', 'Client Name', 'Client Phone', 
         'Client Email', 'Service', 'Date', 'Start Time', 'End Time', 
@@ -425,7 +459,7 @@ export function useGoogleSheets() {
       return true;
     } catch (err: any) {
       console.error('Google Sheets sync error:', err);
-      setError(err?.message || 'Failed to sync appointment to Google Sheets.');
+      setError('Google Sheets sync failed. Appointment saved locally.');
       return false;
     } finally {
       setLoading(false);
@@ -437,6 +471,11 @@ export function useGoogleSheets() {
     setError(null);
 
     try {
+      if (!isGoogleSheetsConfigured()) {
+        console.log('Google Sheets not configured, skipping analytics sync');
+        return false;
+      }
+
       const headers = [
         'Date', 'Total Profiles', 'Local Profiles', 'Service Providers', 
         'Pending Profiles', 'Ready Profiles', 'Published Profiles', 
@@ -477,7 +516,7 @@ export function useGoogleSheets() {
       return true;
     } catch (err: any) {
       console.error('Google Sheets analytics sync error:', err);
-      setError(err?.message || 'Failed to sync analytics to Google Sheets.');
+      setError('Google Sheets analytics sync failed.');
       return false;
     } finally {
       setLoading(false);
@@ -490,13 +529,18 @@ export function useGoogleSheets() {
     let successCount = 0;
 
     try {
+      if (!isGoogleSheetsConfigured()) {
+        console.log('Google Sheets not configured, skipping batch sync');
+        return 0;
+      }
+
       for (const profile of profiles) {
         const success = await syncLocalProfileToSheets(profile);
         if (success) successCount++;
       }
     } catch (err: any) {
       console.error('Batch sync error:', err);
-      setError(err?.message || 'Failed to batch sync profiles');
+      setError('Google Sheets batch sync failed. Data saved locally.');
     } finally {
       setLoading(false);
     }
@@ -510,13 +554,18 @@ export function useGoogleSheets() {
     let successCount = 0;
 
     try {
+      if (!isGoogleSheetsConfigured()) {
+        console.log('Google Sheets not configured, skipping batch sync');
+        return 0;
+      }
+
       for (const provider of providers) {
         const success = await syncServiceProviderToSheets(provider);
         if (success) successCount++;
       }
     } catch (err: any) {
       console.error('Batch sync error:', err);
-      setError(err?.message || 'Failed to batch sync providers');
+      setError('Google Sheets batch sync failed. Data saved locally.');
     } finally {
       setLoading(false);
     }
@@ -534,6 +583,7 @@ export function useGoogleSheets() {
     setupAllSheets,
     signIn,
     isSignedIn,
+    isGoogleSheetsConfigured,
     loading,
     error
   };
