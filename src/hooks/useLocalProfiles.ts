@@ -42,7 +42,7 @@ export function useLocalProfiles() {
   const [profiles, setProfiles] = useState<LocalProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const { generateProfileContent } = useGeminiAI();
-  const { syncLocalProfileToSheets } = useGoogleSheets();
+  const { syncLocalProfileToSheets, signIn, isSignedIn } = useGoogleSheets();
 
   useEffect(() => {
     // Load profiles from localStorage
@@ -90,8 +90,17 @@ export function useLocalProfiles() {
       const updatedProfiles = [...profiles, newProfile];
       saveProfiles(updatedProfiles);
       
-      // Sync to Google Sheets immediately
-      await syncLocalProfileToSheets(newProfile);
+      // Try to sync to Google Sheets (gracefully handle auth failures)
+      try {
+        if (!isSignedIn) {
+          console.log('User not signed in to Google, skipping Sheets sync');
+        } else {
+          await syncLocalProfileToSheets(newProfile);
+        }
+      } catch (sheetsError) {
+        console.warn('Google Sheets sync failed, but profile was saved locally:', sheetsError);
+        // Don't throw error - profile is still saved locally
+      }
       
       // Generate AI content in background
       generateAIContent(newProfile.id, formData);
@@ -122,13 +131,17 @@ export function useLocalProfiles() {
 
         updateProfile(profileId, updatedProfile);
 
-        // Sync updated profile to Google Sheets
+        // Try to sync updated profile to Google Sheets
         const profile = profiles.find(p => p.id === profileId);
-        if (profile) {
-          await syncLocalProfileToSheets({
-            ...profile,
-            ...updatedProfile
-          });
+        if (profile && isSignedIn) {
+          try {
+            await syncLocalProfileToSheets({
+              ...profile,
+              ...updatedProfile
+            });
+          } catch (sheetsError) {
+            console.warn('Google Sheets sync failed for updated profile:', sheetsError);
+          }
         }
       }
     } catch (error) {
@@ -142,8 +155,12 @@ export function useLocalProfiles() {
     const updatedProfiles = profiles.map(profile => {
       if (profile.id === id) {
         const updatedProfile = { ...profile, ...updates };
-        // Sync to Google Sheets when profile is updated
-        syncLocalProfileToSheets(updatedProfile).catch(console.error);
+        // Try to sync to Google Sheets when profile is updated (if signed in)
+        if (isSignedIn) {
+          syncLocalProfileToSheets(updatedProfile).catch(error => {
+            console.warn('Google Sheets sync failed for profile update:', error);
+          });
+        }
         return updatedProfile;
       }
       return profile;
@@ -184,13 +201,24 @@ export function useLocalProfiles() {
     }
   };
 
+  const connectToGoogleSheets = async () => {
+    try {
+      await signIn();
+    } catch (error) {
+      console.error('Failed to connect to Google Sheets:', error);
+      throw error;
+    }
+  };
+
   return {
     profiles,
     loading,
     submitProfile,
     updateProfile,
     deleteProfile,
-    regenerateAIContent
+    regenerateAIContent,
+    connectToGoogleSheets,
+    isSignedIn
   };
 }
 

@@ -6,18 +6,24 @@ const SPREADSHEET_ID = '1paLi0tiSOHucsR4Ma_yrZgeoxVVKvluxjBH-ScDNjUc';
 const LOCAL_SHEET_NAME = 'Local Profiles';
 const PROVIDERS_SHEET_NAME = 'Service Providers';
 
+// Google Sheets API requires OAuth2 for write operations
+const DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+
 export function useGoogleSheets() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
   const initializeGoogleSheetsAPI = async () => {
     const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     
-    if (!apiKey) {
-      throw new Error('Google API key not found');
+    if (!apiKey || !clientId) {
+      throw new Error('Google API key or Client ID not found. Please check your environment variables.');
     }
 
-    // Load Google Sheets API
+    // Load Google API
     if (!window.gapi) {
       await new Promise((resolve, reject) => {
         const script = document.createElement('script');
@@ -28,18 +34,61 @@ export function useGoogleSheets() {
       });
     }
 
+    // Load Google Identity Services
+    if (!window.google) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
     await new Promise((resolve) => {
-      window.gapi.load('client', resolve);
+      window.gapi.load('client:auth2', resolve);
     });
 
     await window.gapi.client.init({
       apiKey: apiKey,
-      discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+      clientId: clientId,
+      discoveryDocs: [DISCOVERY_DOC],
+      scope: SCOPES
     });
+
+    // Check if user is already signed in
+    const authInstance = window.gapi.auth2.getAuthInstance();
+    setIsSignedIn(authInstance.isSignedIn.get());
+  };
+
+  const signIn = async () => {
+    try {
+      await initializeGoogleSheetsAPI();
+      const authInstance = window.gapi.auth2.getAuthInstance();
+      
+      if (!authInstance.isSignedIn.get()) {
+        await authInstance.signIn();
+        setIsSignedIn(true);
+      }
+    } catch (error) {
+      console.error('Sign-in error:', error);
+      throw new Error('Failed to sign in to Google. Please try again.');
+    }
+  };
+
+  const ensureAuthenticated = async () => {
+    await initializeGoogleSheetsAPI();
+    const authInstance = window.gapi.auth2.getAuthInstance();
+    
+    if (!authInstance.isSignedIn.get()) {
+      await signIn();
+    }
   };
 
   const ensureSheetExists = async (sheetName: string, headers: string[]) => {
     try {
+      await ensureAuthenticated();
+      
       // Check if sheet exists
       const response = await window.gapi.client.sheets.spreadsheets.get({
         spreadsheetId: SPREADSHEET_ID,
@@ -66,7 +115,7 @@ export function useGoogleSheets() {
         // Add headers
         await window.gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `${sheetName}!A1:${String.fromCharCode(64 + headers.length)}1`,
+          range: `'${sheetName}'!A1:${String.fromCharCode(64 + headers.length)}1`,
           valueInputOption: 'RAW',
           resource: {
             values: [headers]
@@ -75,6 +124,7 @@ export function useGoogleSheets() {
       }
     } catch (error) {
       console.error('Error ensuring sheet exists:', error);
+      throw error;
     }
   };
 
@@ -83,8 +133,6 @@ export function useGoogleSheets() {
     setError(null);
 
     try {
-      await initializeGoogleSheetsAPI();
-
       const headers = [
         'ID', 'Full Name', 'Skill', 'Years Experience', 'Location', 
         'Contact', 'Availability', 'Status', 'Bio (AI)', 'Suggested Price (ZAR)', 
@@ -111,7 +159,7 @@ export function useGoogleSheets() {
       // Check if profile already exists
       const existingData = await window.gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${LOCAL_SHEET_NAME}!A:A`,
+        range: `'${LOCAL_SHEET_NAME}'!A:A`,
       });
 
       const existingIds = existingData.result.values?.slice(1).map((row: any) => row[0]) || [];
@@ -122,7 +170,7 @@ export function useGoogleSheets() {
         const rowNumber = existingIndex + 2; // +1 for header, +1 for 0-based index
         await window.gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `${LOCAL_SHEET_NAME}!A${rowNumber}:${String.fromCharCode(64 + headers.length)}${rowNumber}`,
+          range: `'${LOCAL_SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(64 + headers.length)}${rowNumber}`,
           valueInputOption: 'RAW',
           resource: {
             values: [values]
@@ -132,7 +180,7 @@ export function useGoogleSheets() {
         // Append new row
         await window.gapi.client.sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEET_ID,
-          range: `${LOCAL_SHEET_NAME}!A:${String.fromCharCode(64 + headers.length)}`,
+          range: `'${LOCAL_SHEET_NAME}'!A:${String.fromCharCode(64 + headers.length)}`,
           valueInputOption: 'RAW',
           insertDataOption: 'INSERT_ROWS',
           resource: {
@@ -144,7 +192,7 @@ export function useGoogleSheets() {
       return true;
     } catch (err) {
       console.error('Google Sheets sync error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to sync to Google Sheets');
+      setError(err instanceof Error ? err.message : 'Failed to sync to Google Sheets. Please ensure you are signed in to Google.');
       return false;
     } finally {
       setLoading(false);
@@ -156,8 +204,6 @@ export function useGoogleSheets() {
     setError(null);
 
     try {
-      await initializeGoogleSheetsAPI();
-
       const headers = [
         'ID', 'Full Name', 'Service', 'Years Experience', 'Location', 
         'Phone', 'Email', 'WhatsApp', 'Website', 'Generated Bio', 
@@ -190,7 +236,7 @@ export function useGoogleSheets() {
       // Check if provider already exists
       const existingData = await window.gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${PROVIDERS_SHEET_NAME}!A:A`,
+        range: `'${PROVIDERS_SHEET_NAME}'!A:A`,
       });
 
       const existingIds = existingData.result.values?.slice(1).map((row: any) => row[0]) || [];
@@ -201,7 +247,7 @@ export function useGoogleSheets() {
         const rowNumber = existingIndex + 2; // +1 for header, +1 for 0-based index
         await window.gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
-          range: `${PROVIDERS_SHEET_NAME}!A${rowNumber}:${String.fromCharCode(64 + headers.length)}${rowNumber}`,
+          range: `'${PROVIDERS_SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(64 + headers.length)}${rowNumber}`,
           valueInputOption: 'RAW',
           resource: {
             values: [values]
@@ -211,7 +257,7 @@ export function useGoogleSheets() {
         // Append new row
         await window.gapi.client.sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEET_ID,
-          range: `${PROVIDERS_SHEET_NAME}!A:${String.fromCharCode(64 + headers.length)}`,
+          range: `'${PROVIDERS_SHEET_NAME}'!A:${String.fromCharCode(64 + headers.length)}`,
           valueInputOption: 'RAW',
           insertDataOption: 'INSERT_ROWS',
           resource: {
@@ -223,7 +269,7 @@ export function useGoogleSheets() {
       return true;
     } catch (err) {
       console.error('Google Sheets sync error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to sync to Google Sheets');
+      setError(err instanceof Error ? err.message : 'Failed to sync to Google Sheets. Please ensure you are signed in to Google.');
       return false;
     } finally {
       setLoading(false);
@@ -275,14 +321,17 @@ export function useGoogleSheets() {
     syncServiceProviderToSheets,
     batchSyncLocalProfiles,
     batchSyncServiceProviders,
+    signIn,
+    isSignedIn,
     loading,
     error
   };
 }
 
-// Extend the global window object to include gapi
+// Extend the global window object to include gapi and google
 declare global {
   interface Window {
     gapi: any;
+    google: any;
   }
 }

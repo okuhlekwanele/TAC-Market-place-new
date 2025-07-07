@@ -22,7 +22,7 @@ export function useGeminiAI() {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       
       if (!apiKey) {
-        throw new Error('Gemini API key not found');
+        throw new Error('Gemini API key not found. Please check your environment variables.');
       }
 
       const prompt = `You are helping a skilled township freelancer write a short professional bio and estimate a fair starting price. Their name is ${fullName}, they are a ${skill} with ${yearsExperience} years of experience in ${location}. Write a warm, confident, 1–2 sentence bio. Then suggest a fair starting price in ZAR (South African Rand). 
@@ -33,7 +33,8 @@ Please respond in this exact JSON format:
   "price": 250
 }`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+      // Updated API endpoint for Gemini 1.5 Flash
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -43,12 +44,47 @@ Please respond in this exact JSON format:
             parts: [{
               text: prompt
             }]
-          }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 1,
+            topP: 1,
+            maxOutputTokens: 2048,
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
         })
       });
 
       if (!response.ok) {
-        throw new Error(`Gemini API error: ${response.status}`);
+        const errorData = await response.text();
+        console.error('Gemini API response:', response.status, errorData);
+        
+        if (response.status === 400) {
+          throw new Error('Invalid request to Gemini API. Please check your API key and try again.');
+        } else if (response.status === 403) {
+          throw new Error('Gemini API access denied. Please check your API key permissions.');
+        } else if (response.status === 404) {
+          throw new Error('Gemini API endpoint not found. Please verify your API key is valid.');
+        } else {
+          throw new Error(`Gemini API error: ${response.status} - ${errorData}`);
+        }
       }
 
       const data = await response.json();
