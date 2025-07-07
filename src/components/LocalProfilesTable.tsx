@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Filter, Eye, Edit3, Trash2, User, Phone, MapPin, Clock, Award, RefreshCw, ExternalLink, Upload, Settings, AlertCircle } from 'lucide-react';
 import { useLocalProfiles, LocalProfile } from '../hooks/useLocalProfiles';
 import { useGoogleSheets } from '../hooks/useGoogleSheets';
+import { GoogleSheetsStatus } from './GoogleSheetsStatus';
 
 export function LocalProfilesTable() {
   const { profiles, updateProfile, deleteProfile, regenerateAIContent, loading } = useLocalProfiles();
@@ -88,37 +89,10 @@ export function LocalProfilesTable() {
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Local Profiles</h2>
             <p className="text-gray-600 mt-1">{profiles.length} total submissions</p>
-            {isSignedIn && (
-              <p className="text-green-600 text-sm mt-1">✓ Connected to Google Sheets</p>
-            )}
-            {sheetsError && (
-              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-start space-x-2">
-                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-red-800 text-sm font-medium">Google Sheets Error</p>
-                    <p className="text-red-700 text-sm mt-1">
-                      {sheetsError.length > 100 && !showErrorDetails 
-                        ? `${sheetsError.substring(0, 100)}...` 
-                        : sheetsError
-                      }
-                    </p>
-                    {sheetsError.length > 100 && (
-                      <button
-                        onClick={() => setShowErrorDetails(!showErrorDetails)}
-                        className="text-red-600 text-sm underline mt-1 hover:text-red-800"
-                      >
-                        {showErrorDetails ? 'Show less' : 'Show more details'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
           
           <div className="flex items-center space-x-4">
@@ -178,6 +152,9 @@ export function LocalProfilesTable() {
             </div>
           </div>
         </div>
+
+        {/* Google Sheets Status */}
+        <GoogleSheetsStatus />
       </div>
 
       {/* Stats Cards */}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LocalProfile } from './useLocalProfiles';
 import { ServiceProvider } from '../types';
 
-const SPREADSHEET_ID = '1paLi0tiSOHucsR4Ma_yrZgeoxVVKvluxjBH-ScDNjUc';
+const SPREADSHEET_ID = import.meta.env.VITE_GOOGLE_SHEETS_ID || '1paLi0tiSOHucsR4Ma_yrZgeoxVVKvluxjBH-ScDNjUc';
 const LOCAL_SHEET_NAME = 'Local Profiles';
 const PROVIDERS_SHEET_NAME = 'Service Providers';
 const APPOINTMENTS_SHEET_NAME = 'Appointments';
@@ -28,7 +28,7 @@ export function useGoogleSheets() {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     
     if (!apiKey || !clientId) {
-      throw new Error('Google Sheets integration is not configured. The application will work without it - your data will be saved locally.');
+      throw new Error('Google Sheets integration is not configured. Please check your environment variables.');
     }
 
     // Load Google API
@@ -43,7 +43,7 @@ export function useGoogleSheets() {
     }
 
     // Load Google Identity Services
-    if (!window.google) {
+    if (!window.google?.accounts) {
       await new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
@@ -66,22 +66,27 @@ export function useGoogleSheets() {
 
     // Check if user is already signed in
     const authInstance = window.gapi.auth2.getAuthInstance();
-    setIsSignedIn(authInstance.isSignedIn.get());
+    if (authInstance) {
+      setIsSignedIn(authInstance.isSignedIn.get());
+    }
   };
 
   const signIn = async () => {
     try {
       setError(null);
+      setLoading(true);
       
       if (!isGoogleSheetsConfigured()) {
-        throw new Error('Google Sheets integration is not configured. The application will work without it - your data will be saved locally.');
+        throw new Error('Google Sheets integration is not configured. Please check your environment variables.');
       }
 
       await initializeGoogleSheetsAPI();
       const authInstance = window.gapi.auth2.getAuthInstance();
       
       if (!authInstance.isSignedIn.get()) {
-        await authInstance.signIn();
+        await authInstance.signIn({
+          prompt: 'consent'
+        });
         setIsSignedIn(true);
       }
     } catch (error: any) {
@@ -91,19 +96,18 @@ export function useGoogleSheets() {
       if (error?.error === 'idpiframe_initialization_failed') {
         const currentOrigin = window.location.origin;
         throw new Error(
-          `Google Sheets integration is not available in this environment. ` +
-          `Your profile data will be saved locally and you can still use all features of the application. ` +
-          `To enable Google Sheets sync, the administrator needs to configure OAuth settings for this URL: ${currentOrigin}`
+          `Google Sheets integration requires proper OAuth configuration. ` +
+          `Please ensure the OAuth client is configured for this domain: ${currentOrigin}`
         );
       } else if (error?.error === 'popup_blocked_by_browser') {
         throw new Error('Sign-in popup was blocked by your browser. Please allow popups for this site and try again.');
       } else if (error?.error === 'access_denied') {
         throw new Error('Google Sign-in was cancelled. You can still use the application - your data will be saved locally.');
-      } else if (error?.message?.includes('not configured')) {
-        throw new Error('Google Sheets integration is not configured. The application will work without it - your data will be saved locally.');
       } else {
-        throw new Error(`Google Sheets sync is not available: ${error?.message || 'Configuration issue'}. Your data will be saved locally instead.`);
+        throw new Error(`Google Sheets connection failed: ${error?.message || 'Unknown error'}. Your data will be saved locally instead.`);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -120,7 +124,6 @@ export function useGoogleSheets() {
         await signIn();
       }
     } catch (error) {
-      // Re-throw the error to be handled by the calling function
       throw error;
     }
   };
@@ -163,13 +166,14 @@ export function useGoogleSheets() {
         });
 
         // Format header row
+        const newSheetId = sheets.length;
         await window.gapi.client.sheets.spreadsheets.batchUpdate({
           spreadsheetId: SPREADSHEET_ID,
           resource: {
             requests: [{
               repeatCell: {
                 range: {
-                  sheetId: sheets.length, // New sheet ID
+                  sheetId: newSheetId,
                   startRowIndex: 0,
                   endRowIndex: 1,
                   startColumnIndex: 0,
@@ -196,9 +200,10 @@ export function useGoogleSheets() {
   const setupAllSheets = async () => {
     try {
       setError(null);
+      setLoading(true);
       
       if (!isGoogleSheetsConfigured()) {
-        setError('Google Sheets integration is not configured. The application will work without it.');
+        setError('Google Sheets integration is not configured. Please check your environment variables.');
         return false;
       }
       
@@ -240,8 +245,10 @@ export function useGoogleSheets() {
       return true;
     } catch (error: any) {
       console.error('Error setting up sheets:', error);
-      setError('Google Sheets sync is not available. Your data will be saved locally instead.');
+      setError(`Failed to setup Google Sheets: ${error.message}`);
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -276,8 +283,8 @@ export function useGoogleSheets() {
         profile.suggestedPriceZAR.toString(),
         profile.createdAt.toISOString(),
         profile.profileImage ? 'Yes' : 'No',
-        '0', // Portfolio Images Count - placeholder
-        '0'  // Customer Reviews Count - placeholder
+        (profile.portfolioImages?.length || 0).toString(),
+        (profile.customerReviews?.length || 0).toString()
       ];
 
       // Check if profile already exists
@@ -378,7 +385,7 @@ export function useGoogleSheets() {
 
       if (existingIndex >= 0) {
         // Update existing row
-        const rowNumber = existingIndex + 2; // +1 for header, +1 for 0-based index
+        const rowNumber = existingIndex + 2;
         await window.gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
           range: `'${PROVIDERS_SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(64 + headers.length)}${rowNumber}`,
@@ -486,7 +493,7 @@ export function useGoogleSheets() {
       await ensureSheetExists(ANALYTICS_SHEET_NAME, headers);
 
       const values = [
-        new Date().toISOString().split('T')[0], // Date
+        new Date().toISOString().split('T')[0],
         analyticsData.totalProfiles?.toString() || '0',
         analyticsData.localProfiles?.toString() || '0',
         analyticsData.serviceProviders?.toString() || '0',
