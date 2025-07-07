@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
-import { Sparkles, User, LogOut } from 'lucide-react';
+import { Sparkles, User, LogOut, Settings, Shield } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { LoginModal } from './LoginModal';
+import { AuthModal } from './AuthModal';
 
 export function Header() {
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const { user, logout, isAuthenticated } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, logout, isAuthenticated, isAdmin, isProvider } = useAuth();
+
+  const getRoleDisplay = () => {
+    if (isAdmin) return 'Admin';
+    if (isProvider) return 'Service Provider';
+    return 'Client';
+  };
+
+  const getRoleColor = () => {
+    if (isAdmin) return 'bg-red-100 text-red-800';
+    if (isProvider) return 'bg-green-100 text-green-800';
+    return 'bg-blue-100 text-blue-800';
+  };
 
   return (
     <>
@@ -36,10 +48,30 @@ export function Header() {
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-3 bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm">
                     <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4" />
+                      {isAdmin ? (
+                        <Shield className="w-4 h-4" />
+                      ) : (
+                        <User className="w-4 h-4" />
+                      )}
                     </div>
-                    <span className="text-sm font-medium">{user?.name}</span>
+                    <div className="text-left">
+                      <div className="text-sm font-medium">{user?.name}</div>
+                      <div className={`text-xs px-2 py-0.5 rounded-full ${getRoleColor()}`}>
+                        {getRoleDisplay()}
+                      </div>
+                    </div>
                   </div>
+                  
+                  {isProvider && (
+                    <button
+                      onClick={() => {/* Navigate to provider dashboard */}}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                      title="Provider Settings"
+                    >
+                      <Settings className="w-5 h-5" />
+                    </button>
+                  )}
+                  
                   <button
                     onClick={logout}
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -50,7 +82,7 @@ export function Header() {
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowLoginModal(true)}
+                  onClick={() => setShowAuthModal(true)}
                   className="bg-white/20 hover:bg-white/30 px-6 py-2 rounded-lg transition-all text-sm font-semibold backdrop-blur-sm border border-white/20"
                 >
                   Sign In
@@ -61,9 +93,9 @@ export function Header() {
         </div>
       </header>
       
-      <LoginModal 
-        isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
       />
     </>
   );

@@ -7,14 +7,16 @@ import { Analytics } from './components/Analytics';
 import { FindServices } from './components/FindServices';
 import { LocalProfilesTable } from './components/LocalProfilesTable';
 import { SocialMediaGenerator } from './components/SocialMediaGenerator';
+import { AdminDashboard } from './components/AdminDashboard';
+import { ProviderDashboard } from './components/ProviderDashboard';
 import { useServiceProviders } from './hooks/useServiceProviders';
 import { useAuth } from './hooks/useAuth';
 import { FormData } from './types';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social'>('find');
+  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social' | 'admin' | 'provider'>('find');
   const { providers, loading, updateProvider, deleteProvider, generateProfile } = useServiceProviders();
-  const { isLoading: authLoading } = useAuth();
+  const { isLoading: authLoading, isAdmin, isProvider } = useAuth();
 
   const handleFormSubmit = async (formData: FormData) => {
     await generateProfile(formData);
@@ -41,8 +43,12 @@ function App() {
         return <SocialMediaGenerator />;
       case 'analytics':
         return <Analytics providers={providers} />;
+      case 'admin':
+        return isAdmin ? <AdminDashboard /> : <FindServices />;
+      case 'provider':
+        return isProvider ? <ProviderDashboard /> : <FindServices />;
       default:
-        return null;
+        return <FindServices />;
     }
   };
 
