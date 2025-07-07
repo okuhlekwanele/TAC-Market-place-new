@@ -89,6 +89,10 @@ export interface FormData {
   service: string;
   yearsExperience: number;
   location: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
   contactDetails: ContactDetails;
   isBusinessOwner: boolean;
   businessInfo?: BusinessInfo;

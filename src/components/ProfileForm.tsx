@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { User, Briefcase, Calendar, MapPin, Sparkles, Phone, Mail, MessageCircle, Globe, Building, Camera, Star, Plus, X, Clock } from 'lucide-react';
 import { FormData } from '../types';
 import { LocalProfileForm } from './LocalProfileForm';
+import { LocationPicker } from './LocationPicker';
+import { NavigationButtons } from './NavigationButtons';
 
 interface ProfileFormProps {
   onSubmit: (data: FormData) => void;
@@ -135,6 +137,14 @@ export function ProfileForm({ onSubmit, loading }: ProfileFormProps) {
     }));
   };
 
+  const handleLocationSelect = (locationData: { address: string; coordinates: { lat: number; lng: number } }) => {
+    setFormData(prev => ({
+      ...prev,
+      location: locationData.address,
+      coordinates: locationData.coordinates
+    }));
+  };
+
   // Custom time slot functions
   const addCustomTimeSlot = () => {
     const newSlot: CustomTimeSlot = {
@@ -236,6 +246,8 @@ export function ProfileForm({ onSubmit, loading }: ProfileFormProps) {
 
   return (
     <div className="max-w-5xl mx-auto">
+      <NavigationButtons />
+      
       {/* Profile Type Selector */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Profile Type</h2>
@@ -373,12 +385,9 @@ export function ProfileForm({ onSubmit, loading }: ProfileFormProps) {
                   <label className="block text-sm font-semibold text-gray-700">
                     Location
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white text-lg"
+                  <LocationPicker
+                    onLocationSelect={handleLocationSelect}
+                    initialLocation={formData.location}
                     placeholder="e.g., Johannesburg, Gauteng"
                   />
                 </div>

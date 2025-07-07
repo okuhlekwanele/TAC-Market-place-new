@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGeminiAI } from './useGeminiAI';
 import { useGoogleSheets } from './useGoogleSheets';
+import { mockLocalProfiles } from '../data/mockProfiles';
 
 export interface LocalProfile {
   id: string;
@@ -65,6 +66,10 @@ export function useLocalProfiles() {
         createdAt: new Date(p.createdAt)
       }));
       setProfiles(parsedProfiles);
+    } else {
+      // Initialize with mock data if no saved data exists
+      setProfiles(mockLocalProfiles);
+      localStorage.setItem('localProfiles', JSON.stringify(mockLocalProfiles));
     }
   }, []);
 

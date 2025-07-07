@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ServiceProvider, FormData } from '../types';
 import { useGoogleMaps } from './useGoogleMaps';
 import { useGoogleSheets } from './useGoogleSheets';
+import { mockServiceProviders } from '../data/mockProfiles';
 
 export function useServiceProviders() {
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
@@ -18,6 +19,10 @@ export function useServiceProviders() {
         createdAt: new Date(p.createdAt)
       }));
       setProviders(parsedProviders);
+    } else {
+      // Initialize with mock data if no saved data exists
+      setProviders(mockServiceProviders);
+      localStorage.setItem('serviceProviders', JSON.stringify(mockServiceProviders));
     }
   }, []);
 

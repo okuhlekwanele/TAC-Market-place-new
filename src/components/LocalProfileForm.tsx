@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { User, Briefcase, Calendar, MapPin, Phone, Clock, Camera, CheckCircle, Star, Plus, X, AlertCircle, Info } from 'lucide-react';
 import { useLocalProfiles } from '../hooks/useLocalProfiles';
+import { LocationPicker } from './LocationPicker';
+import { NavigationButtons } from './NavigationButtons';
 
 interface LocalFormData {
   fullName: string;
@@ -105,6 +107,10 @@ export function LocalProfileForm() {
         setFlexibleHours(defaultHours);
       }
     }
+  };
+
+  const handleLocationSelect = (locationData: { address: string; coordinates: { lat: number; lng: number } }) => {
+    setFormData(prev => ({ ...prev, location: locationData.address }));
   };
 
   const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -250,6 +256,7 @@ export function LocalProfileForm() {
   if (isSubmitted) {
     return (
       <div className="max-w-lg mx-auto">
+        <NavigationButtons />
         <div className="bg-white rounded-3xl shadow-xl p-10 text-center border border-gray-100">
           <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg">
             <CheckCircle className="w-10 h-10 text-white" />
@@ -309,6 +316,8 @@ export function LocalProfileForm() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      <NavigationButtons />
+      
       <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 px-8 py-8">
@@ -433,12 +442,9 @@ export function LocalProfileForm() {
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Location / Area *
               </label>
-              <input
-                type="text"
-                required
-                value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg bg-gray-50 focus:bg-white transition-all"
+              <LocationPicker
+                onLocationSelect={handleLocationSelect}
+                initialLocation={formData.location}
                 placeholder="e.g. Khayelitsha, Tembisa, Gugulethu"
               />
             </div>
