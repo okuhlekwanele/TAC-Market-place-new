@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Search, Filter, Eye, Edit3, Trash2, User, Phone, MapPin, Clock, Award, RefreshCw, ExternalLink, Upload } from 'lucide-react';
+import { Search, Filter, Eye, Edit3, Trash2, User, Phone, MapPin, Clock, Award, RefreshCw, ExternalLink, Upload, Settings } from 'lucide-react';
 import { useLocalProfiles, LocalProfile } from '../hooks/useLocalProfiles';
 import { useGoogleSheets } from '../hooks/useGoogleSheets';
 
 export function LocalProfilesTable() {
   const { profiles, updateProfile, deleteProfile, regenerateAIContent, loading } = useLocalProfiles();
-  const { batchSyncLocalProfiles, loading: sheetsLoading } = useGoogleSheets();
+  const { batchSyncLocalProfiles, setupAllSheets, signIn, isSignedIn, loading: sheetsLoading } = useGoogleSheets();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedProfile, setSelectedProfile] = useState<LocalProfile | null>(null);
@@ -36,8 +36,35 @@ export function LocalProfilesTable() {
   };
 
   const handleBatchSync = async () => {
+    if (!isSignedIn) {
+      try {
+        await signIn();
+      } catch (error) {
+        alert('Please sign in to Google to sync profiles to Google Sheets.');
+        return;
+      }
+    }
+
     const successCount = await batchSyncLocalProfiles(profiles);
     alert(`Successfully synced ${successCount} out of ${profiles.length} profiles to Google Sheets`);
+  };
+
+  const handleSetupSheets = async () => {
+    if (!isSignedIn) {
+      try {
+        await signIn();
+      } catch (error) {
+        alert('Please sign in to Google to setup Google Sheets.');
+        return;
+      }
+    }
+
+    const success = await setupAllSheets();
+    if (success) {
+      alert('Google Sheets have been set up successfully with all necessary columns!');
+    } else {
+      alert('Failed to setup Google Sheets. Please try again.');
+    }
   };
 
   return (
@@ -48,9 +75,31 @@ export function LocalProfilesTable() {
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Local Profiles</h2>
             <p className="text-gray-600 mt-1">{profiles.length} total submissions</p>
+            {isSignedIn && (
+              <p className="text-green-600 text-sm mt-1">✓ Connected to Google Sheets</p>
+            )}
           </div>
           
           <div className="flex items-center space-x-4">
+            {!isSignedIn && (
+              <button
+                onClick={signIn}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <User className="w-4 h-4" />
+                <span>Sign in to Google</span>
+              </button>
+            )}
+            
+            <button
+              onClick={handleSetupSheets}
+              disabled={sheetsLoading}
+              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Settings className="w-4 h-4" />
+              <span>{sheetsLoading ? 'Setting up...' : 'Setup Sheets'}</span>
+            </button>
+            
             <button
               onClick={handleBatchSync}
               disabled={sheetsLoading || profiles.length === 0}

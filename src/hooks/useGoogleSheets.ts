@@ -5,6 +5,8 @@ import { ServiceProvider } from '../types';
 const SPREADSHEET_ID = '1paLi0tiSOHucsR4Ma_yrZgeoxVVKvluxjBH-ScDNjUc';
 const LOCAL_SHEET_NAME = 'Local Profiles';
 const PROVIDERS_SHEET_NAME = 'Service Providers';
+const APPOINTMENTS_SHEET_NAME = 'Appointments';
+const ANALYTICS_SHEET_NAME = 'Analytics';
 
 // Google Sheets API requires OAuth2 for write operations
 const DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
@@ -112,7 +114,7 @@ export function useGoogleSheets() {
           }
         });
 
-        // Add headers
+        // Add headers with formatting
         await window.gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SPREADSHEET_ID,
           range: `'${sheetName}'!A1:${String.fromCharCode(64 + headers.length)}1`,
@@ -121,10 +123,79 @@ export function useGoogleSheets() {
             values: [headers]
           }
         });
+
+        // Format header row
+        await window.gapi.client.sheets.spreadsheets.batchUpdate({
+          spreadsheetId: SPREADSHEET_ID,
+          resource: {
+            requests: [{
+              repeatCell: {
+                range: {
+                  sheetId: sheets.length, // New sheet ID
+                  startRowIndex: 0,
+                  endRowIndex: 1,
+                  startColumnIndex: 0,
+                  endColumnIndex: headers.length
+                },
+                cell: {
+                  userEnteredFormat: {
+                    backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 },
+                    textFormat: { bold: true }
+                  }
+                },
+                fields: 'userEnteredFormat(backgroundColor,textFormat)'
+              }
+            }]
+          }
+        });
       }
     } catch (error) {
       console.error('Error ensuring sheet exists:', error);
       throw error;
+    }
+  };
+
+  const setupAllSheets = async () => {
+    try {
+      // Local Profiles Sheet
+      const localProfileHeaders = [
+        'ID', 'Full Name', 'Skill', 'Years Experience', 'Location', 
+        'Contact', 'Availability', 'Status', 'Bio (AI)', 'Suggested Price (ZAR)', 
+        'Created At', 'Profile Image', 'Portfolio Images Count', 'Customer Reviews Count'
+      ];
+      await ensureSheetExists(LOCAL_SHEET_NAME, localProfileHeaders);
+
+      // Service Providers Sheet
+      const serviceProviderHeaders = [
+        'ID', 'Full Name', 'Service', 'Years Experience', 'Location', 
+        'Phone', 'Email', 'WhatsApp', 'Website', 'Generated Bio', 
+        'Suggested Price', 'Status', 'Is Business Owner', 'Business Name', 
+        'Business Type', 'Business Description', 'Created At', 'Coordinates (Lat)', 
+        'Coordinates (Lng)', 'Profile Images Count', 'Customer Reviews Count'
+      ];
+      await ensureSheetExists(PROVIDERS_SHEET_NAME, serviceProviderHeaders);
+
+      // Appointments Sheet
+      const appointmentHeaders = [
+        'ID', 'Provider ID', 'Provider Name', 'Client Name', 'Client Phone', 
+        'Client Email', 'Service', 'Date', 'Start Time', 'End Time', 
+        'Status', 'Notes', 'Created At', 'Updated At'
+      ];
+      await ensureSheetExists(APPOINTMENTS_SHEET_NAME, appointmentHeaders);
+
+      // Analytics Sheet
+      const analyticsHeaders = [
+        'Date', 'Total Profiles', 'Local Profiles', 'Service Providers', 
+        'Pending Profiles', 'Ready Profiles', 'Published Profiles', 
+        'Total Appointments', 'Pending Appointments', 'Confirmed Appointments', 
+        'Completed Appointments', 'Top Service', 'Top Location', 'Average Price'
+      ];
+      await ensureSheetExists(ANALYTICS_SHEET_NAME, analyticsHeaders);
+
+      return true;
+    } catch (error) {
+      console.error('Error setting up sheets:', error);
+      return false;
     }
   };
 
@@ -136,7 +207,7 @@ export function useGoogleSheets() {
       const headers = [
         'ID', 'Full Name', 'Skill', 'Years Experience', 'Location', 
         'Contact', 'Availability', 'Status', 'Bio (AI)', 'Suggested Price (ZAR)', 
-        'Created At', 'Profile Image'
+        'Created At', 'Profile Image', 'Portfolio Images Count', 'Customer Reviews Count'
       ];
 
       await ensureSheetExists(LOCAL_SHEET_NAME, headers);
@@ -153,7 +224,9 @@ export function useGoogleSheets() {
         profile.bioAI || '',
         profile.suggestedPriceZAR.toString(),
         profile.createdAt.toISOString(),
-        profile.profileImage ? 'Yes' : 'No'
+        profile.profileImage ? 'Yes' : 'No',
+        '0', // Portfolio Images Count - placeholder
+        '0'  // Customer Reviews Count - placeholder
       ];
 
       // Check if profile already exists
@@ -208,7 +281,8 @@ export function useGoogleSheets() {
         'ID', 'Full Name', 'Service', 'Years Experience', 'Location', 
         'Phone', 'Email', 'WhatsApp', 'Website', 'Generated Bio', 
         'Suggested Price', 'Status', 'Is Business Owner', 'Business Name', 
-        'Business Type', 'Business Description', 'Created At'
+        'Business Type', 'Business Description', 'Created At', 'Coordinates (Lat)', 
+        'Coordinates (Lng)', 'Profile Images Count', 'Customer Reviews Count'
       ];
 
       await ensureSheetExists(PROVIDERS_SHEET_NAME, headers);
@@ -230,7 +304,11 @@ export function useGoogleSheets() {
         provider.businessInfo?.businessName || '',
         provider.businessInfo?.businessType || '',
         provider.businessInfo?.description || '',
-        provider.createdAt.toISOString()
+        provider.createdAt.toISOString(),
+        provider.coordinates?.lat?.toString() || '',
+        provider.coordinates?.lng?.toString() || '',
+        provider.profileImages?.length?.toString() || '0',
+        provider.customerReviews?.length?.toString() || '0'
       ];
 
       // Check if provider already exists
@@ -270,6 +348,109 @@ export function useGoogleSheets() {
     } catch (err) {
       console.error('Google Sheets sync error:', err);
       setError(err instanceof Error ? err.message : 'Failed to sync to Google Sheets. Please ensure you are signed in to Google.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const syncAppointmentToSheets = async (appointment: any): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const headers = [
+        'ID', 'Provider ID', 'Provider Name', 'Client Name', 'Client Phone', 
+        'Client Email', 'Service', 'Date', 'Start Time', 'End Time', 
+        'Status', 'Notes', 'Created At', 'Updated At'
+      ];
+
+      await ensureSheetExists(APPOINTMENTS_SHEET_NAME, headers);
+
+      const values = [
+        appointment.id,
+        appointment.providerId,
+        appointment.providerName || '',
+        appointment.clientName,
+        appointment.clientPhone,
+        appointment.clientEmail,
+        appointment.service,
+        appointment.date,
+        appointment.startTime,
+        appointment.endTime,
+        appointment.status,
+        appointment.notes || '',
+        appointment.createdAt.toISOString(),
+        new Date().toISOString()
+      ];
+
+      // Append new appointment
+      await window.gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `'${APPOINTMENTS_SHEET_NAME}'!A:${String.fromCharCode(64 + headers.length)}`,
+        valueInputOption: 'RAW',
+        insertDataOption: 'INSERT_ROWS',
+        resource: {
+          values: [values]
+        }
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Google Sheets sync error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to sync appointment to Google Sheets.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateAnalytics = async (analyticsData: any): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const headers = [
+        'Date', 'Total Profiles', 'Local Profiles', 'Service Providers', 
+        'Pending Profiles', 'Ready Profiles', 'Published Profiles', 
+        'Total Appointments', 'Pending Appointments', 'Confirmed Appointments', 
+        'Completed Appointments', 'Top Service', 'Top Location', 'Average Price'
+      ];
+
+      await ensureSheetExists(ANALYTICS_SHEET_NAME, headers);
+
+      const values = [
+        new Date().toISOString().split('T')[0], // Date
+        analyticsData.totalProfiles?.toString() || '0',
+        analyticsData.localProfiles?.toString() || '0',
+        analyticsData.serviceProviders?.toString() || '0',
+        analyticsData.pendingProfiles?.toString() || '0',
+        analyticsData.readyProfiles?.toString() || '0',
+        analyticsData.publishedProfiles?.toString() || '0',
+        analyticsData.totalAppointments?.toString() || '0',
+        analyticsData.pendingAppointments?.toString() || '0',
+        analyticsData.confirmedAppointments?.toString() || '0',
+        analyticsData.completedAppointments?.toString() || '0',
+        analyticsData.topService || '',
+        analyticsData.topLocation || '',
+        analyticsData.averagePrice?.toString() || '0'
+      ];
+
+      // Append analytics data
+      await window.gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `'${ANALYTICS_SHEET_NAME}'!A:${String.fromCharCode(64 + headers.length)}`,
+        valueInputOption: 'RAW',
+        insertDataOption: 'INSERT_ROWS',
+        resource: {
+          values: [values]
+        }
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Google Sheets analytics sync error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to sync analytics to Google Sheets.');
       return false;
     } finally {
       setLoading(false);
@@ -319,8 +500,11 @@ export function useGoogleSheets() {
   return {
     syncLocalProfileToSheets,
     syncServiceProviderToSheets,
+    syncAppointmentToSheets,
+    updateAnalytics,
     batchSyncLocalProfiles,
     batchSyncServiceProviders,
+    setupAllSheets,
     signIn,
     isSignedIn,
     loading,
