@@ -1,6 +1,6 @@
 import React from 'react';
 import { ServiceProvider } from '../types';
-import { BarChart, TrendingUp, Users, DollarSign, Award } from 'lucide-react';
+import { BarChart, TrendingUp, Users, Banknote, Award } from 'lucide-react';
 
 interface AnalyticsProps {
   providers: ServiceProvider[];
@@ -79,7 +79,7 @@ export function Analytics({ providers }: AnalyticsProps) {
               <p className="text-2xl font-bold text-gray-900">R{stats.avgPrice}</p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-yellow-600" />
+              <Banknote className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
         </div>

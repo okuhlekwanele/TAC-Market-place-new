@@ -1,6 +1,6 @@
 import React from 'react';
 import { ServiceProvider } from '../types';
-import { User, Briefcase, Calendar, MapPin, DollarSign, Check, Clock, Edit3, Trash2 } from 'lucide-react';
+import { User, Briefcase, Calendar, MapPin, Banknote, Check, Clock, Edit3, Trash2 } from 'lucide-react';
 
 interface ProfileCardProps {
   provider: ServiceProvider;
@@ -73,7 +73,7 @@ export function ProfileCard({ provider, onUpdate, onDelete }: ProfileCardProps) 
             <span>{provider.location}</span>
           </div>
           <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <DollarSign className="w-4 h-4" />
+            <Banknote className="w-4 h-4" />
             <span>R{provider.suggestedPrice}</span>
           </div>
         </div>

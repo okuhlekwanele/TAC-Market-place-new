@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Edit3, Save, X, Phone, Mail, MapPin, Briefcase, Calendar, DollarSign } from 'lucide-react';
+import { User, Edit3, Save, X, Phone, Mail, MapPin, Briefcase, Calendar, Banknote } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useServiceProviders } from '../hooks/useServiceProviders';
 import { useLocalProfiles } from '../hooks/useLocalProfiles';
@@ -342,7 +342,7 @@ export function ProviderDashboard() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                <DollarSign className="w-4 h-4 inline mr-2" />
+                <Banknote className="w-4 h-4 inline mr-2" />
                 Suggested Price
               </label>
               {isEditing ? (
