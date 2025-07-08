@@ -9,19 +9,45 @@ import { LocalProfilesTable } from './components/LocalProfilesTable';
 import { SocialMediaGenerator } from './components/SocialMediaGenerator';
 import { AdminDashboard } from './components/AdminDashboard';
 import { ProviderDashboard } from './components/ProviderDashboard';
+import { PricingPage } from './components/PricingPage';
+import { CheckoutSuccess } from './pages/CheckoutSuccess';
+import { CheckoutCancel } from './pages/CheckoutCancel';
 import { useServiceProviders } from './hooks/useServiceProviders';
 import { useAuth } from './hooks/useAuth';
 import { FormData } from './types';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social' | 'admin' | 'provider'>('find');
+  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social' | 'admin' | 'provider' | 'pricing'>('find');
   const { providers, loading, updateProvider, deleteProvider, generateProfile } = useServiceProviders();
   const { isLoading: authLoading, isAdmin, isProvider } = useAuth();
+
+  // Handle routing based on URL
+  React.useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/checkout/success') {
+      // Don't change activeTab, let CheckoutSuccess component handle this
+      return;
+    } else if (path === '/checkout/cancel') {
+      // Don't change activeTab, let CheckoutCancel component handle this
+      return;
+    } else if (path === '/pricing') {
+      setActiveTab('pricing');
+    }
+  }, []);
 
   const handleFormSubmit = async (formData: FormData) => {
     await generateProfile(formData);
     setActiveTab('manage');
   };
+
+  // Handle special routes
+  if (window.location.pathname === '/checkout/success') {
+    return <CheckoutSuccess />;
+  }
+
+  if (window.location.pathname === '/checkout/cancel') {
+    return <CheckoutCancel />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -47,6 +73,8 @@ function App() {
         return isAdmin ? <AdminDashboard /> : <FindServices />;
       case 'provider':
         return isProvider ? <ProviderDashboard /> : <FindServices />;
+      case 'pricing':
+        return <PricingPage />;
       default:
         return <FindServices />;
     }

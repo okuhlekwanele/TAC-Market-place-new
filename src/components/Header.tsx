@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, User, LogOut, Settings, Shield } from 'lucide-react';
+import { Sparkles, User, LogOut, Settings, Shield, CreditCard } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { AuthModal } from './AuthModal';
 
@@ -17,6 +17,10 @@ export function Header() {
     if (isAdmin) return 'bg-red-100 text-red-800';
     if (isProvider) return 'bg-green-100 text-green-800';
     return 'bg-blue-100 text-blue-800';
+  };
+
+  const handlePricingClick = () => {
+    window.location.href = '/pricing';
   };
 
   return (
@@ -43,6 +47,15 @@ export function Header() {
                 <Sparkles className="w-4 h-4 text-yellow-300" />
                 <span className="hidden sm:inline font-medium">Powered by AI</span>
               </div>
+              
+              {/* Pricing Button */}
+              <button
+                onClick={handlePricingClick}
+                className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-all text-sm font-semibold backdrop-blur-sm border border-white/20"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Pricing</span>
+              </button>
               
               {isAuthenticated ? (
                 <div className="flex items-center space-x-3">
