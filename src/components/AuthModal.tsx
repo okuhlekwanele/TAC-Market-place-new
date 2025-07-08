@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, User, Mail, Phone, Lock, Eye, EyeOff, AlertCircle, CheckCircle, Send } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { LoginCredentials, RegisterData } from '../types/auth';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalProps) {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<'login' | 'register'>(defaultMode);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -35,23 +37,38 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
 
   if (!isOpen) return null;
 
+  const resetForm = () => {
+    setLoginData({ email: '', password: '' });
+    setRegisterData({ email: '', password: '', name: '', phone: '', role: 'client' });
+    setError('');
+    setSuccess('');
+  };
+
+  const switchMode = (newMode: 'login' | 'register') => {
+    setMode(newMode);
+    resetForm();
+    setShowForgotPassword(false);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     const result = await login(loginData);
-    
+
     if (result.success) {
       setSuccess('Login successful!');
       setTimeout(() => {
         onClose();
+        resetForm();
         setSuccess('');
+        navigate('/dashboard'); // Redirect after login
       }, 1000);
     } else {
       setError(result.error || 'Login failed');
     }
-    
     setLoading(false);
   };
 
@@ -68,18 +85,18 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
     }
 
     const result = await register(registerData);
-    
+
     if (result.success) {
       setSuccess('Registration successful! Welcome email sent to your inbox.');
       setTimeout(() => {
         onClose();
+        resetForm();
         setSuccess('');
-        setRegisterData({ email: '', password: '', name: '', phone: '', role: 'client' });
+        navigate('/dashboard'); // Redirect after registration
       }, 1000);
     } else {
       setError(result.error || 'Registration failed');
     }
-    
     setLoading(false);
   };
 
@@ -87,9 +104,10 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     const result = await requestPasswordReset(resetEmail);
-    
+
     if (result.success) {
       setSuccess('Password reset instructions sent to your email!');
       setShowForgotPassword(false);
@@ -97,20 +115,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
     } else {
       setError(result.error || 'Failed to send reset email');
     }
-    
     setLoading(false);
-  };
-
-  const resetForm = () => {
-    setLoginData({ email: '', password: '' });
-    setRegisterData({ email: '', password: '', name: '', phone: '', role: 'client' });
-    setError('');
-    setSuccess('');
-  };
-
-  const switchMode = (newMode: 'login' | 'register') => {
-    setMode(newMode);
-    resetForm();
   };
 
   return (
@@ -118,10 +123,18 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-bold text-gray-900">
-            {showForgotPassword ? 'Reset Password' : mode === 'login' ? 'Sign In' : 'Create Account'}
+            {showForgotPassword
+              ? 'Reset Password'
+              : mode === 'login'
+              ? 'Sign In'
+              : 'Create Account'}
           </h2>
           <button
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              resetForm();
+              setShowForgotPassword(false);
+            }}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
@@ -130,30 +143,32 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
 
         <div className="p-6">
           {/* Mode Switcher */}
-          {!showForgotPassword && <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
-            <button
-              onClick={() => switchMode('login')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                mode === 'login'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => switchMode('register')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                mode === 'register'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Register
-            </button>
-          </div>}
+          {!showForgotPassword && (
+            <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+              <button
+                onClick={() => switchMode('login')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                  mode === 'login'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => switchMode('register')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                  mode === 'register'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Register
+              </button>
+            </div>
+          )}
 
-          {/* Error/Success Messages */}
+          {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
               <div className="flex items-center space-x-2">
@@ -163,6 +178,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
             </div>
           )}
 
+          {/* Success Message */}
           {success && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <div className="flex items-center space-x-2">
@@ -184,7 +200,9 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                   type="email"
                   required
                   value={loginData.email}
-                  onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) =>
+                    setLoginData((prev) => ({ ...prev, email: e.target.value }))
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your email"
                 />
@@ -200,7 +218,9 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={loginData.password}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                    onChange={(e) =>
+                      setLoginData((prev) => ({ ...prev, password: e.target.value }))
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
                     placeholder="Enter your password"
                   />
@@ -208,10 +228,29 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
+              </div>
+
+              <div className="flex justify-between items-center text-sm text-blue-600 hover:text-blue-800 cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(true);
+                    setError('');
+                    setSuccess('');
+                  }}
+                  className="underline"
+                >
+                  Forgot password?
+                </button>
               </div>
 
               <button
@@ -236,7 +275,9 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                   type="text"
                   required
                   value={registerData.name}
-                  onChange={(e) => setRegisterData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setRegisterData((prev) => ({ ...prev, name: e.target.value }))
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your full name"
                 />
@@ -251,7 +292,9 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                   type="email"
                   required
                   value={registerData.email}
-                  onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) =>
+                    setRegisterData((prev) => ({ ...prev, email: e.target.value }))
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your email"
                 />
@@ -265,7 +308,9 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                 <input
                   type="tel"
                   value={registerData.phone}
-                  onChange={(e) => setRegisterData(prev => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e) =>
+                    setRegisterData((prev) => ({ ...prev, phone: e.target.value }))
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your phone number"
                 />
@@ -277,7 +322,12 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                 </label>
                 <select
                   value={registerData.role}
-                  onChange={(e) => setRegisterData(prev => ({ ...prev, role: e.target.value as 'provider' | 'client' }))}
+                  onChange={(e) =>
+                    setRegisterData((prev) => ({
+                      ...prev,
+                      role: e.target.value as 'provider' | 'client',
+                    }))
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="client">Client (Book Services)</option>
@@ -295,7 +345,9 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={registerData.password}
-                    onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
+                    onChange={(e) =>
+                      setRegisterData((prev) => ({ ...prev, password: e.target.value }))
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
                     placeholder="Create a password (min 6 characters)"
                   />
@@ -303,8 +355,13 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -358,6 +415,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                   setShowForgotPassword(false);
                   setResetEmail('');
                   setError('');
+                  setSuccess('');
                 }}
                 className="w-full text-gray-600 hover:text-gray-800 py-2 transition-colors"
               >
