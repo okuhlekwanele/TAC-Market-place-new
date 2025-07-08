@@ -21,7 +21,7 @@ export function FindServices() {
     'Plumbing', 'Electrical Work', 'Carpentry', 'Painting', 'Gardening',
     'Cleaning', 'Tutoring', 'Catering', 'Photography', 'Web Development',
     'Graphic Design', 'Music Lessons', 'Fitness Training', 'Hair Styling',
-    'Mechanic', 'Tailoring'
+    'Mechanic', 'Tailoring', 'Other'
   ];
 
   const handleLocationSearch = async (location: string) => {
