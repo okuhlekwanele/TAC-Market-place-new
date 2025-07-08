@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Filter, Calendar, Star, Phone, Mail, MessageCircle } from 'lucide-react';
+import { Search, MapPin, Filter, Calendar, Star, Phone, Mail, MessageCircle, Bot } from 'lucide-react';
 import { ServiceProvider } from '../types';
 import { useServiceProviders } from '../hooks/useServiceProviders';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
@@ -53,6 +53,10 @@ export function FindServices() {
           <div>
             <h2 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">Find Services</h2>
             <p className="text-gray-600 mt-2 text-lg">Discover local service providers on TAC Market Place</p>
+            <div className="flex items-center space-x-2 mt-3">
+              <Bot className="w-4 h-4 text-blue-500" />
+              <p className="text-sm text-blue-600">Need help finding services? Try our AI assistant in the bottom right!</p>
+            </div>
           </div>
           
           <div className="flex items-center space-x-4">

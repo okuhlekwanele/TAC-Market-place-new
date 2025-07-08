@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, Users, BarChart, Search, Database, Share2, Shield, Settings, CreditCard } from 'lucide-react';
+import { PlusCircle, Users, BarChart, Search, Database, Share2, Shield, Settings, CreditCard, MessageCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface NavigationProps {

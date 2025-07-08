@@ -12,6 +12,7 @@ import { ProviderDashboard } from './components/ProviderDashboard';
 import { PricingPage } from './components/PricingPage';
 import { CheckoutSuccess } from './pages/CheckoutSuccess';
 import { CheckoutCancel } from './pages/CheckoutCancel';
+import { Chatbot } from './components/Chatbot';
 import { useServiceProviders } from './hooks/useServiceProviders';
 import { useAuth } from './hooks/useAuth';
 import { FormData } from './types';
@@ -98,6 +99,7 @@ function App() {
       <main className="py-8 px-4 sm:px-6 lg:px-8">
         {renderContent()}
       </main>
+      <Chatbot />
     </div>
   );
 }
