@@ -1,176 +1,167 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { AuthUser, LoginCredentials, RegisterData } from '../types/auth';
-
-// Default admin credentials
-const DEFAULT_ADMIN = {
-  id: 'admin-001',
-  email: 'admin@tacmarketplace.com',
-  password: 'TACAdmin2024!', // In production, this should be hashed
-  name: 'TAC Admin',
-  role: 'admin' as const,
-  createdAt: new Date(),
-  lastLogin: new Date(),
-  isActive: true
-};
+import { useEmailService } from './useEmailService';
+import { useGoogleSheets } from './useGoogleSheets';
 
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { sendWelcomeEmail } = useEmailService();
+  const { syncUserToSheets } = useGoogleSheets();
 
+  // Load authenticated user on mount
   useEffect(() => {
-    // Initialize default admin if not exists
-    const users = getStoredUsers();
-    const adminExists = users.some(u => u.role === 'admin');
-    
-    if (!adminExists) {
-      const updatedUsers = [...users, DEFAULT_ADMIN];
-      localStorage.setItem('tacUsers', JSON.stringify(updatedUsers));
-    }
-
-    // Load current user from localStorage
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      setUser({
-        ...parsedUser,
-        createdAt: new Date(parsedUser.createdAt),
-        lastLogin: new Date(parsedUser.lastLogin)
-      });
-    }
-    setIsLoading(false);
+    const getUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (data.user) {
+        const profile = await fetchUserProfile(data.user.id);
+        setUser(profile);
+      }
+      setIsLoading(false);
+    };
+    getUser();
   }, []);
 
-  const getStoredUsers = (): any[] => {
-    const stored = localStorage.getItem('tacUsers');
-    return stored ? JSON.parse(stored) : [];
+  const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data) return null;
+    return {
+      id: data.id,
+      email: data.email,
+      name: data.name,
+      phone: data.phone,
+      role: data.role,
+      createdAt: new Date(data.created_at),
+      lastLogin: new Date(data.last_login),
+      providerId: data.provider_id || null,
+      isActive: data.is_active
+    };
   };
 
-  const saveUsers = (users: any[]) => {
-    localStorage.setItem('tacUsers', JSON.stringify(users));
-  };
+  const register = async (data: RegisterData): Promise<{ success: boolean; error?: string }> => {
+    const { email, password, name, phone, role } = data;
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password
+    });
 
-  const login = async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
-    const users = getStoredUsers();
-    const foundUser = users.find(u => 
-      u.email.toLowerCase() === credentials.email.toLowerCase() && 
-      u.password === credentials.password &&
-      u.isActive
-    );
-
-    if (!foundUser) {
-      return { success: false, error: 'Invalid email or password' };
+    if (signUpError || !authData.user) {
+      return { success: false, error: signUpError?.message };
     }
 
-    // Update last login
-    foundUser.lastLogin = new Date();
-    const updatedUsers = users.map(u => u.id === foundUser.id ? foundUser : u);
-    saveUsers(updatedUsers);
+    // Create user profile
+    const { error: insertError } = await supabase.from('users').insert({
+      id: authData.user.id,
+      email,
+      name,
+      phone,
+      role,
+      created_at: new Date().toISOString(),
+      last_login: new Date().toISOString(),
+      is_active: true
+    });
 
-    const authUser: AuthUser = {
-      id: foundUser.id,
-      email: foundUser.email,
-      name: foundUser.name,
-      phone: foundUser.phone,
-      role: foundUser.role,
-      providerId: foundUser.providerId,
-      createdAt: new Date(foundUser.createdAt),
-      lastLogin: new Date(foundUser.lastLogin),
-      isActive: foundUser.isActive
-    };
+    if (insertError) return { success: false, error: insertError.message };
 
-    setUser(authUser);
-    localStorage.setItem('currentUser', JSON.stringify(authUser));
-    
+    const profile = await fetchUserProfile(authData.user.id);
+    if (profile) {
+      setUser(profile);
+      sendWelcomeEmail(email, name);
+      syncUserToSheets(profile);
+    }
+
     return { success: true };
   };
 
-  const register = async (data: RegisterData): Promise<{ success: boolean; error?: string; user?: AuthUser }> => {
-    const users = getStoredUsers();
-    
-    // Check if email already exists
-    if (users.some(u => u.email.toLowerCase() === data.email.toLowerCase())) {
-      return { success: false, error: 'Email already registered' };
+  const login = async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
+    const { email, password } = credentials;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error || !data.user) {
+      return { success: false, error: error?.message || 'Login failed' };
     }
 
-    const newUser = {
-      id: `user-${Date.now()}`,
-      ...data,
-      createdAt: new Date(),
-      lastLogin: new Date(),
-      isActive: true
-    };
+    const profile = await fetchUserProfile(data.user.id);
+    if (profile) {
+      setUser(profile);
+    }
 
-    const updatedUsers = [...users, newUser];
-    saveUsers(updatedUsers);
-
-    const authUser: AuthUser = {
-      id: newUser.id,
-      email: newUser.email,
-      name: newUser.name,
-      phone: newUser.phone,
-      role: newUser.role,
-      createdAt: newUser.createdAt,
-      lastLogin: newUser.lastLogin,
-      isActive: newUser.isActive
-    };
-
-    setUser(authUser);
-    localStorage.setItem('currentUser', JSON.stringify(authUser));
-
-    return { success: true, user: authUser };
+    return { success: true };
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('currentUser');
   };
 
-  const updateUser = (updates: Partial<AuthUser>) => {
+  const updateUser = async (updates: Partial<AuthUser>) => {
     if (!user) return;
 
-    const updatedUser = { ...user, ...updates };
-    setUser(updatedUser);
-    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    const { error } = await supabase
+      .from('users')
+      .update({
+        ...updates,
+        last_login: new Date().toISOString()
+      })
+      .eq('id', user.id);
 
-    // Update in users storage
-    const users = getStoredUsers();
-    const updatedUsers = users.map(u => u.id === user.id ? { ...u, ...updates } : u);
-    saveUsers(updatedUsers);
+    if (!error) {
+      const updated = { ...user, ...updates };
+      setUser(updated);
+      syncUserToSheets(updated);
+    }
   };
 
   const linkProviderAccount = (providerId: string) => {
     updateUser({ providerId, role: 'provider' });
   };
 
-  const getAllUsers = (): AuthUser[] => {
-    if (user?.role !== 'admin') return [];
-    
-    return getStoredUsers().map(u => ({
+  const getAllUsers = async (): Promise<AuthUser[]> => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .neq('role', 'admin');
+
+    if (error || !data) return [];
+
+    return data.map((u: any) => ({
       id: u.id,
       email: u.email,
       name: u.name,
       phone: u.phone,
       role: u.role,
-      providerId: u.providerId,
-      createdAt: new Date(u.createdAt),
-      lastLogin: new Date(u.lastLogin),
-      isActive: u.isActive
+      providerId: u.provider_id,
+      createdAt: new Date(u.created_at),
+      lastLogin: new Date(u.last_login),
+      isActive: u.is_active
     }));
   };
 
-  const updateUserStatus = (userId: string, isActive: boolean) => {
-    if (user?.role !== 'admin') return;
+  const updateUserStatus = async (userId: string, isActive: boolean) => {
+    await supabase
+      .from('users')
+      .update({ is_active: isActive })
+      .eq('id', userId);
+  };
 
-    const users = getStoredUsers();
-    const updatedUsers = users.map(u => 
-      u.id === userId ? { ...u, isActive } : u
-    );
-    saveUsers(updatedUsers);
+  const requestPasswordReset = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
   };
 
   return {
     user,
     isLoading,
+    isAuthenticated: !!user,
+    isAdmin: user?.role === 'admin',
+    isProvider: user?.role === 'provider',
     login,
     register,
     logout,
@@ -178,8 +169,6 @@ export function useAuth() {
     linkProviderAccount,
     getAllUsers,
     updateUserStatus,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
-    isProvider: user?.role === 'provider'
+    requestPasswordReset
   };
 }
