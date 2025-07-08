@@ -315,3 +315,158 @@ export const mockLocalProfiles = [
     createdAt: new Date('2024-02-12')
   }
 ];
+{
+  id: 'mock-009',
+  fullName: 'Lerato Ndlovu',
+  service: 'Tutoring',
+  yearsExperience: 2,
+  location: 'Observatory, Cape Town',
+  coordinates: { lat: -33.9286, lng: 18.4478 },
+  contactDetails: {
+    phone: '+27 61 234 7890',
+    email: 'lerato.ndlovu@studentmail.co.za',
+    whatsapp: '+27 61 234 7890'
+  },
+  generatedBio: 'Lerato is a UCT student offering tutoring services in mathematics and life sciences for high school learners. Passionate about education and academic success.',
+  suggestedPrice: 100,
+  status: 'Published' as const,
+  createdAt: new Date('2024-03-20'),
+  isBusinessOwner: false,
+  availability: [
+    { date: '2024-12-22', startTime: '14:00', endTime: '17:00', available: true },
+    { date: '2024-12-23', startTime: '10:00', endTime: '13:00', available: true }
+  ]
+},
+{
+  id: 'mock-010',
+  fullName: 'Jason Petersen',
+  service: 'Carpentry',
+  yearsExperience: 11,
+  location: 'Salt River, Cape Town',
+  coordinates: { lat: -33.9289, lng: 18.4487 },
+  contactDetails: {
+    phone: '+27 72 456 7891',
+    email: 'jason.carpentry@gmail.com',
+    whatsapp: '+27 72 456 7891'
+  },
+  generatedBio: 'Jason is a seasoned carpenter based in Salt River with over a decade of experience in custom furniture, woodwork repairs, and home fittings.',
+  suggestedPrice: 380,
+  status: 'Published' as const,
+  createdAt: new Date('2024-04-10'),
+  isBusinessOwner: true,
+  businessInfo: {
+    businessName: 'Salt River Woodworks',
+    businessType: 'Small Business' as const,
+    description: 'Quality custom carpentry for homes and small businesses.',
+    services: ['Custom Furniture', 'Cabinet Making', 'Repairs'],
+    operatingHours: {
+      monday: { open: '08:00', close: '17:00', closed: false },
+      tuesday: { open: '08:00', close: '17:00', closed: false },
+      wednesday: { open: '08:00', close: '17:00', closed: false },
+      thursday: { open: '08:00', close: '17:00', closed: false },
+      friday: { open: '08:00', close: '17:00', closed: false },
+      saturday: { open: '09:00', close: '13:00', closed: false },
+      sunday: { open: '00:00', close: '00:00', closed: true }
+    }
+  },
+  availability: [
+    { date: '2024-12-21', startTime: '08:00', endTime: '12:00', available: true },
+    { date: '2024-12-22', startTime: '13:00', endTime: '17:00', available: true }
+  ]
+},
+{
+  id: 'mock-011',
+  fullName: 'Noluthando Jacobs',
+  service: 'Nail Technician',
+  yearsExperience: 6,
+  location: 'Delft, Cape Town',
+  coordinates: { lat: -33.9646, lng: 18.6297 },
+  contactDetails: {
+    phone: '+27 74 321 6789',
+    email: 'nolu.nails@gmail.com',
+    whatsapp: '+27 74 321 6789'
+  },
+  generatedBio: 'Noluthando offers expert nail services including gel, acrylic, and nail art from her home studio in Delft. She’s known for creative designs and affordable beauty services.',
+  suggestedPrice: 150,
+  status: 'Published' as const,
+  createdAt: new Date('2024-01-18'),
+  isBusinessOwner: true,
+  businessInfo: {
+    businessName: 'Nolu Nails Studio',
+    businessType: 'Home Business' as const,
+    description: 'Affordable nail art and care for every occasion.',
+    services: ['Gel Nails', 'Acrylics', 'Nail Art'],
+    operatingHours: {
+      monday: { open: '09:00', close: '18:00', closed: false },
+      tuesday: { open: '09:00', close: '18:00', closed: false },
+      wednesday: { open: '09:00', close: '18:00', closed: false },
+      thursday: { open: '09:00', close: '18:00', closed: false },
+      friday: { open: '09:00', close: '19:00', closed: false },
+      saturday: { open: '08:00', close: '16:00', closed: false },
+      sunday: { open: '00:00', close: '00:00', closed: true }
+    }
+  },
+  availability: [
+    { date: '2024-12-20', startTime: '09:00', endTime: '12:00', available: true },
+    { date: '2024-12-21', startTime: '13:00', endTime: '17:00', available: true }
+  ]
+},
+{
+  id: 'mock-012',
+  fullName: 'Zubair Khan',
+  service: 'Tech Support',
+  yearsExperience: 5,
+  location: 'Parklands, Cape Town',
+  coordinates: { lat: -33.8186, lng: 18.4892 },
+  contactDetails: {
+    phone: '+27 83 210 9876',
+    email: 'zubair.tech@gmail.com',
+    whatsapp: '+27 83 210 9876'
+  },
+  generatedBio: 'Zubair is an IT support specialist based in Parklands, offering PC and mobile repairs, home network setup, and software troubleshooting with 5 years of experience.',
+  suggestedPrice: 250,
+  status: 'Published' as const,
+  createdAt: new Date('2024-02-17'),
+  isBusinessOwner: false,
+  availability: [
+    { date: '2024-12-22', startTime: '10:00', endTime: '14:00', available: true },
+    { date: '2024-12-23', startTime: '15:00', endTime: '18:00', available: true }
+  ]
+},
+{
+  id: 'mock-013',
+  fullName: 'Chantal Brown',
+  service: 'Event Planning',
+  yearsExperience: 9,
+  location: 'Cape Town CBD',
+  coordinates: { lat: -33.9258, lng: 18.4232 },
+  contactDetails: {
+    phone: '+27 79 555 3210',
+    email: 'chantal.events@gmail.com',
+    whatsapp: '+27 79 555 3210'
+  },
+  generatedBio: 'Chantal is an experienced event planner based in Cape Town, specializing in weddings, parties, and corporate functions. She’s known for her eye for detail and smooth execution.',
+  suggestedPrice: 600,
+  status: 'Published' as const,
+  createdAt: new Date('2024-01-05'),
+  isBusinessOwner: true,
+  businessInfo: {
+    businessName: 'Brown Events Co.',
+    businessType: 'Small Business' as const,
+    description: 'Creating memorable events with precision and flair.',
+    services: ['Weddings', 'Corporate Events', 'Parties'],
+    operatingHours: {
+      monday: { open: '09:00', close: '17:00', closed: false },
+      tuesday: { open: '09:00', close: '17:00', closed: false },
+      wednesday: { open: '09:00', close: '17:00', closed: false },
+      thursday: { open: '09:00', close: '17:00', closed: false },
+      friday: { open: '09:00', close: '17:00', closed: false },
+      saturday: { open: '10:00', close: '15:00', closed: false },
+      sunday: { open: '00:00', close: '00:00', closed: true }
+    }
+  },
+  availability: [
+    { date: '2024-12-21', startTime: '11:00', endTime: '15:00', available: true },
+    { date: '2024-12-22', startTime: '09:00', endTime: '12:00', available: true }
+  ]
+}
