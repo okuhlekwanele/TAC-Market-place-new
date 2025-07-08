@@ -464,7 +464,9 @@ export const mockLocalProfiles = [
       sunday: { open: '00:00', close: '00:00', closed: true }
     }
   },
-  availability: [
+   availability: [
     { date: '2024-12-21', startTime: '11:00', endTime: '15:00', available: true },
-    { date: '2024-12-22', startTime: '09:00', endTime: '12:00', available: true },
+    { date: '2024-12-22', startTime: '09:00', endTime: '12:00', available: true }
   ]
+}
+]; // 👈 closes the array of mockServiceProviders
