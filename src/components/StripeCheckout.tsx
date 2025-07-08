@@ -74,8 +74,8 @@ export function StripeCheckout({ selectedProduct, onSuccess, onCancel }: StripeC
       <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 p-8">
         <div className="flex items-center space-x-4 mb-4">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
-          <CreditCard className="w-6 h-6 text-white" />
-        </div>
+            <CreditCard className="w-6 h-6 text-white" />
+          </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Secure Checkout</h2>
             <p className="text-gray-600">Choose your plan and get started</p>
@@ -198,95 +198,6 @@ export function StripeCheckout({ selectedProduct, onSuccess, onCancel }: StripeC
             <span>PCI Compliant</span>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-          <h2 className="text-xl font-bold text-gray-900">Choose Your Plan</h2>
-          <p className="text-gray-600">Select a product to purchase</p>
-        </div>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center space-x-2">
-            <AlertCircle className="w-5 h-5 text-red-500" />
-            <p className="text-red-800 text-sm font-medium">{error}</p>
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-4 mb-6">
-        {stripeProducts.map((product) => (
-          <div
-            key={product.priceId}
-            className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
-              selectedProductId === product.priceId
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-            onClick={() => setSelectedProductId(product.priceId)}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">{product.name}</h3>
-                <p className="text-sm text-gray-600 mt-1">{product.description}</p>
-                <div className="flex items-center space-x-2 mt-2">
-                  <span className="text-lg font-bold text-gray-900">
-                    {formatPrice(product)}
-                  </span>
-                  {product.mode === 'subscription' && (
-                    <span className="text-sm text-gray-500">/ month</span>
-                  )}
-                  {product.mode === 'payment' && (
-                    <span className="text-sm text-gray-500">one-time</span>
-                  )}
-                </div>
-              </div>
-              <div className={`w-5 h-5 rounded-full border-2 ${
-                selectedProductId === product.priceId
-                  ? 'border-blue-500 bg-blue-500'
-                  : 'border-gray-300'
-              }`}>
-                {selectedProductId === product.priceId && (
-                  <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-3">
-        <button
-          onClick={handleCheckout}
-          disabled={loading || !user}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <div className="flex items-center justify-center space-x-2">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Processing...</span>
-            </div>
-          ) : (
-            'Proceed to Checkout'
-          )}
-        </button>
-
-        {!user && (
-          <p className="text-sm text-gray-600 text-center">
-            Please sign in to continue with checkout
-          </p>
-        )}
-
-        {onCancel && (
-          <button
-            onClick={onCancel}
-            className="w-full text-gray-600 hover:text-gray-800 py-2 transition-colors"
-          >
-            Cancel
-          </button>
-        )}
       </div>
     </div>
   );
