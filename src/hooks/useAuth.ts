@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../supabase';
 import { AuthUser, LoginCredentials, RegisterData } from '../types/auth';
 import { useEmailService } from './useEmailService';
 import { useGoogleSheets } from './useGoogleSheets';
