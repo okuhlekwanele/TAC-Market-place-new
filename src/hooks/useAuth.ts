@@ -1,7 +1,11 @@
 // hooks/useAuth.ts
 import { supabase } from '../lib/supabase';
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router-dom';
+
+const navigate = useNavigate();
+navigate('/dashboard');
+;
 
 export function useAuth() {
   const [user, setUser] = useState(null);
