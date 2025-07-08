@@ -1,60 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Crown, Calendar, CreditCard, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Crown, Calendar, CreditCard, AlertCircle, CheckCircle, Loader2, Settings, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { createClient } from '@supabase/supabase-js';
+import { useStripe } from '../hooks/useStripe';
 import { stripeProducts } from '../stripe-config';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
-
-interface SubscriptionData {
-  subscription_status: string;
-  price_id: string | null;
-  current_period_start: number | null;
-  current_period_end: number | null;
-  cancel_at_period_end: boolean;
-  payment_method_brand: string | null;
-  payment_method_last4: string | null;
-}
-
 export function SubscriptionStatus() {
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      fetchSubscription();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const fetchSubscription = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { data, error: fetchError } = await supabase
-        .from('stripe_user_subscriptions')
-        .select('*')
-        .maybeSingle();
-
-      if (fetchError) {
-        throw fetchError;
-      }
-
-      setSubscription(data);
-    } catch (err: any) {
-      console.error('Error fetching subscription:', err);
-      setError('Failed to load subscription information');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { 
+    subscription, 
+    loading, 
+    error, 
+    createPortalSession, 
+    cancelSubscription, 
+    formatAmount,
+    isSubscriptionActive,
+    isSubscriptionCanceling
+  } = useStripe();
+  const [actionLoading, setActionLoading] = useState(false);
 
   if (!user) {
     return null;
@@ -62,7 +24,7 @@ export function SubscriptionStatus() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
         <div className="flex items-center justify-center space-x-2">
           <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
           <span className="text-gray-600">Loading subscription...</span>
@@ -73,7 +35,7 @@ export function SubscriptionStatus() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
         <div className="flex items-center space-x-2">
           <AlertCircle className="w-5 h-5 text-red-500" />
           <p className="text-red-800 text-sm font-medium">{error}</p>
@@ -82,9 +44,9 @@ export function SubscriptionStatus() {
     );
   }
 
-  if (!subscription || subscription.subscription_status === 'not_started') {
+  if (!subscription || subscription.subscription_status === 'not_started' || !isSubscriptionActive()) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+      <div className="bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 rounded-2xl p-6">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
             <Crown className="w-5 h-5 text-gray-500" />
@@ -97,6 +59,30 @@ export function SubscriptionStatus() {
       </div>
     );
   }
+
+  const handleManageSubscription = async () => {
+    setActionLoading(true);
+    try {
+      await createPortalSession();
+    } catch (err) {
+      console.error('Failed to open portal:', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.')) {
+      setActionLoading(true);
+      try {
+        await cancelSubscription();
+      } catch (err) {
+        console.error('Failed to cancel subscription:', err);
+      } finally {
+        setActionLoading(false);
+      }
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -137,8 +123,8 @@ export function SubscriptionStatus() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
             <Crown className="w-5 h-5 text-white" />
@@ -157,7 +143,7 @@ export function SubscriptionStatus() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {subscription.current_period_start && (
           <div className="flex items-center space-x-2">
             <Calendar className="w-4 h-4 text-gray-400" />
@@ -183,7 +169,7 @@ export function SubscriptionStatus() {
         )}
       </div>
 
-      {subscription.cancel_at_period_end && (
+      {isSubscriptionCanceling() && (
         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 text-yellow-600" />
@@ -193,6 +179,35 @@ export function SubscriptionStatus() {
           </div>
         </div>
       )}
+
+      {/* Action Buttons */}
+      <div className="flex items-center space-x-3 pt-6 border-t border-gray-200">
+        <button
+          onClick={handleManageSubscription}
+          disabled={actionLoading}
+          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+        >
+          <Settings className="w-4 h-4" />
+          <span>{actionLoading ? 'Loading...' : 'Manage Subscription'}</span>
+        </button>
+        
+        {!isSubscriptionCanceling() && (
+          <button
+            onClick={handleCancelSubscription}
+            disabled={actionLoading}
+            className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            <X className="w-4 h-4" />
+            <span>Cancel Subscription</span>
+          </button>
+        )}
+      </div>
+
+      <div className="mt-4 text-xs text-gray-500 text-center">
+        <p>
+          Billing managed securely by Stripe. Changes take effect immediately.
+        </p>
+      </div>
     </div>
   );
 }
