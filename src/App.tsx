@@ -10,6 +10,7 @@ import { SocialMediaGenerator } from './components/SocialMediaGenerator';
 import { AdminDashboard } from './components/AdminDashboard';
 import { ProviderDashboard } from './components/ProviderDashboard';
 import { PricingPage } from './components/PricingPage';
+import { EngagementDashboard } from './components/EngagementDashboard';
 import { CheckoutSuccess } from './pages/CheckoutSuccess';
 import { CheckoutCancel } from './pages/CheckoutCancel';
 import { Chatbot } from './components/Chatbot';
@@ -18,7 +19,7 @@ import { useAuth } from './hooks/useAuth';
 import { FormData } from './types';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social' | 'admin' | 'provider' | 'pricing'>('find');
+  const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social' | 'admin' | 'provider' | 'pricing' | 'engagement'>('find');
   const { providers, loading, updateProvider, deleteProvider, generateProfile } = useServiceProviders();
   const { isLoading: authLoading, isAdmin, isProvider } = useAuth();
 
@@ -76,6 +77,8 @@ function App() {
         return isProvider ? <ProviderDashboard /> : <FindServices />;
       case 'pricing':
         return <PricingPage />;
+      case 'engagement':
+        return <EngagementDashboard />;
       default:
         return <FindServices />;
     }

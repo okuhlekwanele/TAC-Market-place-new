@@ -1,10 +1,10 @@
 import React from 'react';
-import { PlusCircle, Users, BarChart, Search, Database, Share2, Shield, Settings, CreditCard, MessageCircle } from 'lucide-react';
+import { PlusCircle, Users, BarChart, Search, Database, Share2, Shield, Settings, CreditCard, MessageCircle, TrendingUp } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface NavigationProps {
-  activeTab: 'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social' | 'admin' | 'provider' | 'pricing';
-  onTabChange: (tab: 'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social' | 'admin' | 'provider' | 'pricing') => void;
+  activeTab: 'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social' | 'admin' | 'provider' | 'pricing' | 'engagement';
+  onTabChange: (tab: 'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social' | 'admin' | 'provider' | 'pricing' | 'engagement') => void;
 }
 
 export function Navigation({ activeTab, onTabChange }: NavigationProps) {
@@ -17,6 +17,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
     { id: 'local', label: 'Local Profiles', icon: Database },
     { id: 'social', label: 'Social Media', icon: Share2 },
     { id: 'analytics', label: 'Analytics', icon: BarChart },
+    { id: 'engagement', label: 'Engagement', icon: TrendingUp },
     { id: 'pricing', label: 'Pricing', icon: CreditCard }
   ];
 

@@ -27,6 +27,8 @@ export function useGeminiAI() {
 
       const prompt = `You are helping a skilled township freelancer write a short professional bio and estimate a fair starting price. Their name is ${fullName}, they are a ${skill} with ${yearsExperience} years of experience in ${location}. Write a warm, confident, 1–2 sentence bio. Then suggest a fair starting price in ZAR (South African Rand). 
 
+IMPORTANT: Write the bio in a positive, professional tone. Avoid any negative language or words that could be perceived as unprofessional. Focus on skills, experience, and value provided to clients.
+
 Please respond in this exact JSON format:
 {
   "bio": "Professional bio here",
