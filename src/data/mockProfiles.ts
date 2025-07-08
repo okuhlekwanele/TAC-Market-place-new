@@ -313,8 +313,7 @@ export const mockLocalProfiles = [
     bioAI: 'Nadia creates beautiful handmade crochet items with 6 years of experience. Specializes in baby clothes, blankets, and custom designs with attention to detail and quality.',
     suggestedPriceZAR: 80,
     createdAt: new Date('2024-02-12')
-  }
-];
+  },
 {
   id: 'mock-009',
   fullName: 'Lerato Ndlovu',
