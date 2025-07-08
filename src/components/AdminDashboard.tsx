@@ -386,6 +386,12 @@ export function AdminDashboard() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> All user registrations are automatically synced to Google Sheets when configured. 
+                  Welcome emails are sent to new users upon successful registration.
+                </p>
+              </div>
                 <h3 className="text-xl font-bold text-gray-900">Profile Details</h3>
                 <button
                   onClick={() => setSelectedItem(null)}
@@ -408,25 +414,36 @@ export function AdminDashboard() {
                     <label className="text-sm font-medium text-gray-500">Experience</label>
                     <p className="text-gray-900">{selectedItem.yearsExperience} years</p>
                   </div>
+                            <span className="text-xs text-gray-500">
+                              Joined {user.createdAt.toLocaleDateString()}
+                            </span>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Location</label>
                     <p className="text-gray-900">{selectedItem.location}</p>
                   </div>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Bio</label>
-                  <p className="text-gray-900 mt-1 p-3 bg-gray-50 rounded-lg">
-                    {'generatedBio' in selectedItem ? selectedItem.generatedBio : selectedItem.bioAI}
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Suggested Price</label>
-                  <p className="text-gray-900 text-lg font-semibold">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleToggleUserStatus(user.id, user.isActive)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            user.isActive 
+                              ? 'text-red-600 hover:bg-red-50' 
+                              : 'text-green-600 hover:bg-green-50'
+                          }`}
+                          title={user.isActive ? 'Suspend User' : 'Activate User'}
+                        >
+                          {user.isActive ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                        </button>
+                      </div>
                     R{'suggestedPrice' in selectedItem ? selectedItem.suggestedPrice : selectedItem.suggestedPriceZAR}
                   </p>
                 </div>
+                
+                {allUsers.length === 0 && (
+                  <div className="text-center py-12">
+                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No users registered yet</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

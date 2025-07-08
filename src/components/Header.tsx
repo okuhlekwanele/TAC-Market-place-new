@@ -69,7 +69,7 @@ export function Header() {
                     </div>
                     <div className="text-left">
                       <div className="text-sm font-medium">{user?.name}</div>
-                      <div className={`text-xs px-2 py-0.5 rounded-full ${getRoleColor()}`}>
+                      <div className={`text-xs px-2 py-0.5 rounded-full font-medium ${getRoleColor()}`}>
                         {getRoleDisplay()}
                       </div>
                     </div>
@@ -94,12 +94,17 @@ export function Header() {
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="bg-white/20 hover:bg-white/30 px-6 py-2 rounded-lg transition-all text-sm font-semibold backdrop-blur-sm border border-white/20"
-                >
-                  Sign In
-                </button>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="bg-white/20 hover:bg-white/30 px-6 py-2 rounded-lg transition-all text-sm font-semibold backdrop-blur-sm border border-white/20"
+                  >
+                    Sign In
+                  </button>
+                  <div className="text-xs text-white/70 bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm">
+                    Admin Login Available
+                  </div>
+                </div>
               )}
             </div>
           </div>

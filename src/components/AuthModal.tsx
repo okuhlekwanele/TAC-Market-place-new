@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Phone, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, User, Mail, Phone, Lock, Eye, EyeOff, AlertCircle, CheckCircle, Send } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { LoginCredentials, RegisterData } from '../types/auth';
 
@@ -15,8 +15,10 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   
-  const { login, register } = useAuth();
+  const { login, register, requestPasswordReset } = useAuth();
 
   const [loginData, setLoginData] = useState<LoginCredentials>({
     email: '',
@@ -57,6 +59,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     if (registerData.password.length < 6) {
       setError('Password must be at least 6 characters long');
@@ -67,13 +70,32 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
     const result = await register(registerData);
     
     if (result.success) {
-      setSuccess('Registration successful!');
+      setSuccess('Registration successful! Welcome email sent to your inbox.');
       setTimeout(() => {
         onClose();
         setSuccess('');
+        setRegisterData({ email: '', password: '', name: '', phone: '', role: 'client' });
       }, 1000);
     } else {
       setError(result.error || 'Registration failed');
+    }
+    
+    setLoading(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    const result = await requestPasswordReset(resetEmail);
+    
+    if (result.success) {
+      setSuccess('Password reset instructions sent to your email!');
+      setShowForgotPassword(false);
+      setResetEmail('');
+    } else {
+      setError(result.error || 'Failed to send reset email');
     }
     
     setLoading(false);
@@ -96,7 +118,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-bold text-gray-900">
-            {mode === 'login' ? 'Sign In' : 'Create Account'}
+            {showForgotPassword ? 'Reset Password' : mode === 'login' ? 'Sign In' : 'Create Account'}
           </h2>
           <button
             onClick={onClose}
@@ -108,7 +130,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
 
         <div className="p-6">
           {/* Mode Switcher */}
-          <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+          {!showForgotPassword && <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
             <button
               onClick={() => switchMode('login')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
@@ -129,18 +151,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
             >
               Register
             </button>
-          </div>
-
-          {/* Admin Login Info */}
-          {mode === 'login' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h4 className="text-sm font-medium text-blue-800 mb-2">Admin Access</h4>
-              <p className="text-xs text-blue-700 mb-2">
-                <strong>Email:</strong> admin@tacmarketplace.com<br />
-                <strong>Password:</strong> TACAdmin2024!
-              </p>
-            </div>
-          )}
+          </div>}
 
           {/* Error/Success Messages */}
           {error && (
@@ -162,7 +173,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
           )}
 
           {/* Login Form */}
-          {mode === 'login' && (
+          {mode === 'login' && !showForgotPassword && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -214,7 +225,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
           )}
 
           {/* Register Form */}
-          {mode === 'register' && (
+          {mode === 'register' && !showForgotPassword && (
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -304,6 +315,53 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                 className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-green-700 hover:to-blue-700 transition-all disabled:opacity-50"
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
+              </button>
+            </form>
+          )}
+
+          {/* Forgot Password Form */}
+          {showForgotPassword && (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="text-center mb-6">
+                <p className="text-gray-600">
+                  Enter your email address and we'll send you instructions to reset your password.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Mail className="w-4 h-4 inline mr-2" />
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+              >
+                <Send className="w-4 h-4" />
+                <span>{loading ? 'Sending...' : 'Send Reset Instructions'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setResetEmail('');
+                  setError('');
+                }}
+                className="w-full text-gray-600 hover:text-gray-800 py-2 transition-colors"
+              >
+                Back to Sign In
               </button>
             </form>
           )}
