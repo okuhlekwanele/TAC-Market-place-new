@@ -468,4 +468,3 @@ export const mockLocalProfiles = [
     { date: '2024-12-21', startTime: '11:00', endTime: '15:00', available: true },
     { date: '2024-12-22', startTime: '09:00', endTime: '12:00', available: true }
   ]
-}
