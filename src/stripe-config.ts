@@ -1,6 +1,6 @@
 export const stripeProducts = [
   {
-    priceId: 'prod_SdpfWwmvwTQajZ', // Replace with your actual price ID
+    priceId: 'price_1QTest1', // Replace with your actual Stripe price ID
     name: 'Service Booking',
     description: 'Book professional services with verified providers',
     mode: 'payment' as const,
@@ -8,16 +8,16 @@ export const stripeProducts = [
     currency: 'ZAR'
   },
   {
-    priceId: 'prod_SdnIJ1ML5eMuHb', // Replace with your actual price ID
-    name: 'Pro individual Subscription',
+    priceId: 'price_1QTest2', // Replace with your actual Stripe price ID
+    name: 'Individual Subscription',
     description: 'Access to AI profile generation and premium features',
     mode: 'subscription' as const,
     price: 99,
     currency: 'ZAR'
   },
   {
-    priceId: 'price_1RiVkACVwlXJEJ4LUrEYcLDe', // Replace with your actual price ID
-    name: 'Pro business subscription',
+    priceId: 'price_1QTest3', // Replace with your actual Stripe price ID
+    name: 'Business Subscription',
     description: 'Complete business solution with booking management and analytics',
     mode: 'subscription' as const,
     price: 199,
