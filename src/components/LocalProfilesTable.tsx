@@ -8,7 +8,6 @@ import {
 import { useLocalProfiles, LocalProfile } from '../hooks/useLocalProfiles'; // 👈 THIS IS ESSENTIAL
 import { useGoogleSheets } from '../hooks/useGoogleSheets';
 import { GoogleSheetsStatus } from './GoogleSheetsStatus';
-import { Pencil, Check, X } from 'lucide-react';
 
 export function LocalProfilesTable() {
   const {
