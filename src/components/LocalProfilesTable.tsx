@@ -1,4 +1,13 @@
-// ... [Imports remain unchanged]
+import React, { useState } from 'react';
+import {
+  Search, Filter, Eye, Edit3, Trash2, User, Phone,
+  MapPin, Clock, Award, RefreshCw, ExternalLink, Upload,
+  Settings, AlertCircle, Pencil, Check, X
+} from 'lucide-react';
+
+import { useLocalProfiles, LocalProfile } from '../hooks/useLocalProfiles'; // 👈 THIS IS ESSENTIAL
+import { useGoogleSheets } from '../hooks/useGoogleSheets';
+import { GoogleSheetsStatus } from './GoogleSheetsStatus';
 import { Pencil, Check, X } from 'lucide-react';
 
 export function LocalProfilesTable() {
