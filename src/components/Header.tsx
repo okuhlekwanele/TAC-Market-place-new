@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Sparkles, User, LogOut, Settings, Shield, CreditCard } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { AuthModal } from './AuthModal';
 
 export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, logout, isAuthenticated, isAdmin, isProvider } = useAuth();
+  const navigate = useNavigate();
 
   const getRoleDisplay = () => {
     if (isAdmin) return 'Admin';
@@ -20,8 +22,7 @@ export function Header() {
   };
 
   const handlePricingClick = () => {
-    // Use React Router navigation instead of window.location
-    setActiveTab('pricing');
+    navigate('/pricing');
   };
 
   return (
