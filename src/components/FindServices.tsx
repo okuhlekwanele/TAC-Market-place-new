@@ -5,6 +5,8 @@ import { useServiceProviders } from '../hooks/useServiceProviders';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { MapView } from './MapView';
 import { BookingModal } from './BookingModal';
+import { useAuth } from '../hooks/useAuth';
+
 
 export function FindServices() {
   const [searchTerm, setSearchTerm] = useState('');
