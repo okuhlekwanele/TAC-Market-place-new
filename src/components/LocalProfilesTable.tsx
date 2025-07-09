@@ -1,5 +1,10 @@
+// LocalProfilesTable.tsx
+
 import React, { useState } from 'react';
-import { Search, Filter, Eye, Edit3, Trash2, User, Phone, MapPin, Clock, Award, RefreshCw, ExternalLink, Upload, Settings, AlertCircle } from 'lucide-react';
+import {
+  Search, Filter, Eye, Edit3, Trash2, User, Phone, MapPin, Clock,
+  Award, RefreshCw, ExternalLink, Upload, Settings
+} from 'lucide-react';
 import { useLocalProfiles, LocalProfile } from '../hooks/useLocalProfiles';
 import { useGoogleSheets } from '../hooks/useGoogleSheets';
 import { GoogleSheetsStatus } from './GoogleSheetsStatus';
@@ -10,15 +15,12 @@ export function LocalProfilesTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedProfile, setSelectedProfile] = useState<LocalProfile | null>(null);
-  const [showErrorDetails, setShowErrorDetails] = useState(false);
 
   const filteredProfiles = profiles.filter(profile => {
     const matchesSearch = profile.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         profile.skill.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         profile.location.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      profile.skill.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || profile.status === filterStatus;
-    
     return matchesSearch && matchesFilter;
   });
 
@@ -77,71 +79,51 @@ export function LocalProfilesTable() {
     }
   };
 
-  const handleSignIn = async () => {
-    try {
-      await signIn();
-    } catch (error: any) {
-      alert(`Google Sign-in Error: ${error.message}`);
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      {/* Header */}
+      {/* Header & Actions */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Local Profiles</h2>
             <p className="text-gray-600 mt-1">{profiles.length} total submissions</p>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             {!isSignedIn && (
-              <button
-                onClick={handleSignIn}
-                disabled={sheetsLoading}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button onClick={signIn} className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
                 <User className="w-4 h-4" />
                 <span>{sheetsLoading ? 'Signing in...' : 'Sign in to Google'}</span>
               </button>
             )}
-            
-            <button
-              onClick={handleSetupSheets}
-              disabled={sheetsLoading}
-              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+
+            <button onClick={handleSetupSheets} className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
               <Settings className="w-4 h-4" />
-              <span>{sheetsLoading ? 'Setting up...' : 'Setup Sheets'}</span>
+              <span>Setup Sheets</span>
             </button>
-            
-            <button
-              onClick={handleBatchSync}
-              disabled={sheetsLoading || profiles.length === 0}
-              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+
+            <button onClick={handleBatchSync} className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
               <Upload className="w-4 h-4" />
-              <span>{sheetsLoading ? 'Syncing...' : 'Sync to Sheets'}</span>
+              <span>Sync to Sheets</span>
             </button>
-            
+
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search profiles..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Search profiles..."
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg"
               />
             </div>
-            
+
             <div className="relative">
               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg"
               >
                 <option value="all">All Status</option>
                 <option value="Pending Bio">Pending Bio</option>
@@ -152,120 +134,78 @@ export function LocalProfilesTable() {
             </div>
           </div>
         </div>
-
-        {/* Google Sheets Status */}
         <GoogleSheetsStatus />
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-gray-900">{profiles.length}</div>
-          <div className="text-sm text-gray-600">Total Profiles</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-yellow-600">
-            {profiles.filter(p => p.status === 'Pending Bio').length}
-          </div>
-          <div className="text-sm text-gray-600">Pending AI</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-green-600">
-            {profiles.filter(p => p.status === 'Ready').length}
-          </div>
-          <div className="text-sm text-gray-600">Ready</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-blue-600">
-            {profiles.filter(p => p.status === 'Published').length}
-          </div>
-          <div className="text-sm text-gray-600">Published</div>
-        </div>
       </div>
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Profile
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Skill & Experience
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Location & Contact
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Bio (AI)
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Suggested Price (ZAR)
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Profile</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Skill</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Contact</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Status</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Bio</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Price</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredProfiles.map((profile) => (
-                <tr key={profile.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
+            <tbody className="divide-y divide-gray-100">
+              {filteredProfiles.map(profile => (
+                <tr key={profile.id}>
+                  <td className="px-6 py-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10">
                         {profile.profileImage ? (
-                          <img
-                            className="h-10 w-10 rounded-full object-cover"
-                            src={profile.profileImage}
-                            alt={profile.fullName}
-                          />
+                          <img src={profile.profileImage} alt="" className="rounded-full w-10 h-10 object-cover" />
                         ) : (
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                            <User className="h-5 w-5 text-white" />
+                          <div className="w-10 h-10 rounded-full bg-blue-400 flex items-center justify-center text-white">
+                            <User className="w-5 h-5" />
                           </div>
                         )}
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {profile.fullName}
-                        </div>
-                        <div className="text-sm text-gray-500 flex items-center">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {profile.availability}
+                      <div>
+                        <div className="text-gray-900 font-medium">{profile.fullName}</div>
+                        <div className="text-sm text-gray-500 flex items-start">
+                          <Clock className="w-3 h-3 mt-1 mr-2" />
+                          <div className="flex flex-col space-y-1">
+                            {Array.isArray(profile.availability) && profile.availability.length > 0 ? (
+                              profile.availability.map((slot, i) => (
+                                <div key={i}>
+                                  {slot.date}: {slot.startTime}–{slot.endTime} ({slot.available ? '✅' : '❌'})
+                                </div>
+                              ))
+                            ) : (
+                              <span className="italic text-gray-400">No availability</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </td>
-                  
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{profile.skill}</div>
-                    <div className="text-sm text-gray-500 flex items-center">
-                      <Award className="w-3 h-3 mr-1" />
-                      {profile.yearsExperience} years
+                  <td className="px-6 py-4">
+                    <div className="text-gray-900">{profile.skill}</div>
+                    <div className="text-gray-500 text-xs flex items-center">
+                      <Award className="w-3 h-3 mr-1" /> {profile.yearsExperience} yrs
                     </div>
                   </td>
-                  
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 flex items-center">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {profile.location}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center text-gray-700">
+                      <MapPin className="w-3 h-3 mr-1" /> {profile.location}
                     </div>
-                    <div className="text-sm text-gray-500 flex items-center">
-                      <Phone className="w-3 h-3 mr-1" />
-                      {profile.contact}
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Phone className="w-3 h-3 mr-1" /> {profile.contact}
                     </div>
                   </td>
-                  
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     <select
                       value={profile.status}
                       onChange={(e) => handleStatusUpdate(profile.id, e.target.value)}
-                      className={`text-xs font-medium px-2.5 py-0.5 rounded-full border-0 ${statusColors[profile.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}`}
+                      className={`text-xs font-medium px-2.5 py-0.5 rounded-full border-0 ${
+                        statusColors[profile.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'
+                      }`}
                     >
                       <option value="Pending Bio">Pending Bio</option>
                       <option value="Ready">Ready</option>
@@ -273,55 +213,30 @@ export function LocalProfilesTable() {
                       <option value="AI Generation Failed">AI Failed</option>
                     </select>
                   </td>
-                  
+                  <td className="px-6 py-4 max-w-xs truncate" title={profile.bioAI || 'Not generated'}>
+                    {profile.bioAI || <span className="text-gray-400 italic">Not generated</span>}
+                  </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 max-w-xs">
-                      {profile.bioAI ? (
-                        <div className="truncate" title={profile.bioAI}>
-                          {profile.bioAI}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 italic">Not generated yet</span>
-                      )}
-                    </div>
+                    {profile.suggestedPriceZAR ? `R${profile.suggestedPriceZAR}` : (
+                      <span className="text-gray-400 italic">Not set</span>
+                    )}
                   </td>
-                  
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {profile.suggestedPriceZAR > 0 ? (
-                        `R${profile.suggestedPriceZAR}`
-                      ) : (
-                        <span className="text-gray-400 italic">Not set</span>
-                      )}
-                    </div>
-                  </td>
-                  
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => setSelectedProfile(profile)}
-                        className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded"
-                        title="View Details"
-                      >
+                  <td className="px-6 py-4">
+                    <div className="flex space-x-2">
+                      <button onClick={() => setSelectedProfile(profile)} className="text-blue-600 hover:text-blue-900" title="View Details">
                         <Eye className="w-4 h-4" />
                       </button>
-                      
                       {(profile.status === 'Pending Bio' || profile.status === 'AI Generation Failed') && (
                         <button
                           onClick={() => handleRegenerateAI(profile.id)}
+                          className="text-green-600 hover:text-green-900"
                           disabled={loading}
-                          className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded disabled:opacity-50"
-                          title="Generate AI Content"
+                          title="Regenerate"
                         >
                           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                         </button>
                       )}
-                      
-                      <button
-                        onClick={() => deleteProfile(profile.id)}
-                        className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
-                        title="Delete"
-                      >
+                      <button onClick={() => deleteProfile(profile.id)} className="text-red-600 hover:text-red-900" title="Delete">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -331,129 +246,53 @@ export function LocalProfilesTable() {
             </tbody>
           </table>
         </div>
-        
         {filteredProfiles.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No profiles found</h3>
-            <p className="text-gray-600">Try adjusting your search or filter criteria</p>
+          <div className="text-center py-12 text-gray-500 italic">
+            No profiles match your search or filters.
           </div>
         )}
       </div>
 
-      {/* Profile Detail Modal */}
+      {/* Modal (you can paste your working version here) */}
       {selectedProfile && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-gray-900">Profile Details</h3>
-                <button
-                  onClick={() => setSelectedProfile(null)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  ×
-                </button>
+                <button onClick={() => setSelectedProfile(null)} className="text-gray-500 text-xl">×</button>
               </div>
-              
               <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  {selectedProfile.profileImage ? (
-                    <img
-                      className="h-16 w-16 rounded-full object-cover"
-                      src={selectedProfile.profileImage}
-                      alt={selectedProfile.fullName}
-                    />
-                  ) : (
-                    <div className="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                      <User className="h-8 w-8 text-white" />
-                    </div>
-                  )}
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900">{selectedProfile.fullName}</h4>
-                    <p className="text-gray-600">{selectedProfile.skill}</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Experience</label>
-                    <p className="text-gray-900">{selectedProfile.yearsExperience} years</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Availability</label>
-                    <p className="text-gray-900">{selectedProfile.availability}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Location</label>
-                    <p className="text-gray-900">{selectedProfile.location}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Contact</label>
-                    <div className="flex items-center space-x-2">
-                      <p className="text-gray-900">{selectedProfile.contact}</p>
-                      <a
-                        href={`https://wa.me/${selectedProfile.contact.replace(/\D/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-green-600 hover:text-green-800"
-                        title="Contact via WhatsApp"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Status</label>
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ml-2 ${statusColors[selectedProfile.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}`}>
-                    {selectedProfile.status}
-                  </span>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-500">AI Generated Bio</label>
-                  <p className="text-gray-900 mt-1 p-3 bg-gray-50 rounded-lg">
-                    {selectedProfile.bioAI || 'Not generated yet'}
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Suggested Price</label>
-                  <p className="text-gray-900 text-lg font-semibold">
-                    {selectedProfile.suggestedPriceZAR > 0 ? `R${selectedProfile.suggestedPriceZAR}` : 'Not set'}
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Submitted</label>
-                  <p className="text-gray-900">{selectedProfile.createdAt.toLocaleDateString()}</p>
-                </div>
-
-                {(selectedProfile.status === 'Pending Bio' || selectedProfile.status === 'AI Generation Failed') && (
-                  <div className="pt-4 border-t">
-                    <button
-                      onClick={() => {
-                        handleRegenerateAI(selectedProfile.id);
-                        setSelectedProfile(null);
-                      }}
-                      disabled={loading}
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <div className="flex items-center justify-center space-x-2">
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Generating AI Content...</span>
+                <div className="text-lg font-semibold">{selectedProfile.fullName}</div>
+                <div className="text-sm text-gray-500">{selectedProfile.skill} – {selectedProfile.yearsExperience} yrs</div>
+                <div className="text-sm text-gray-500">📍 {selectedProfile.location}</div>
+                <div className="text-sm text-gray-500">📞 {selectedProfile.contact}</div>
+                <div className="text-sm text-gray-500">
+                  <strong>Availability:</strong>
+                  <div className="mt-1 space-y-1">
+                    {Array.isArray(selectedProfile.availability) && selectedProfile.availability.length > 0 ? (
+                      selectedProfile.availability.map((slot, idx) => (
+                        <div key={idx}>
+                          {slot.date}: {slot.startTime}–{slot.endTime} ({slot.available ? '✅' : '❌'})
                         </div>
-                      ) : (
-                        'Generate AI Content'
-                      )}
-                    </button>
+                      ))
+                    ) : (
+                      <span className="italic text-gray-400">No availability</span>
+                    )}
                   </div>
-                )}
+                </div>
+                <div className="pt-4">
+                  <button
+                    onClick={() => {
+                      handleRegenerateAI(selectedProfile.id);
+                      setSelectedProfile(null);
+                    }}
+                    disabled={loading}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+                  >
+                    {loading ? 'Generating...' : 'Generate AI Bio'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
