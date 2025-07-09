@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
 import { ProfileForm } from './components/ProfileForm';
@@ -14,6 +14,7 @@ import { EngagementDashboard } from './components/EngagementDashboard';
 import { CheckoutSuccess } from './pages/CheckoutSuccess';
 import { CheckoutCancel } from './pages/CheckoutCancel';
 import { Chatbot } from './components/Chatbot';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { useServiceProviders } from './hooks/useServiceProviders';
 import { useAuth } from './hooks/useAuth';
 import { FormData } from './types';
@@ -22,18 +23,16 @@ function App() {
   const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'analytics' | 'find' | 'local' | 'social' | 'admin' | 'provider' | 'pricing' | 'engagement'>('find');
   const { providers, loading, updateProvider, deleteProvider, generateProfile } = useServiceProviders();
   const { isLoading: authLoading, isAdmin, isProvider } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Handle routing based on URL
-  React.useEffect(() => {
-    const path = window.location.pathname;
-    if (path === '/checkout/success') {
-      // Don't change activeTab, let CheckoutSuccess component handle this
-      return;
-    } else if (path === '/checkout/cancel') {
-      // Don't change activeTab, let CheckoutCancel component handle this
-      return;
-    } else if (path === '/pricing') {
+  useEffect(() => {
+    // Handle tab changes based on route
+    const path = location.pathname;
+    if (path === '/pricing') {
       setActiveTab('pricing');
+    } else if (path === '/') {
+      setActiveTab('find');
     }
   }, []);
 
@@ -42,14 +41,14 @@ function App() {
     setActiveTab('manage');
   };
 
-  // Handle special routes
-  if (window.location.pathname === '/checkout/success') {
-    return <CheckoutSuccess />;
-  }
-
-  if (window.location.pathname === '/checkout/cancel') {
-    return <CheckoutCancel />;
-  }
+  const handleTabChange = (tab: typeof activeTab) => {
+    setActiveTab(tab);
+    if (tab === 'pricing') {
+      navigate('/pricing');
+    } else {
+      navigate('/');
+    }
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -96,14 +95,20 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-orange-50">
-      <Header />
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
-      <main className="py-8 px-4 sm:px-6 lg:px-8">
-        {renderContent()}
-      </main>
-      <Chatbot />
-    </div>
+    <Routes>
+      <Route path="/checkout/success" element={<CheckoutSuccess />} />
+      <Route path="/checkout/cancel" element={<CheckoutCancel />} />
+      <Route path="/*" element={
+        <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-orange-50">
+          <Header />
+          <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
+          <main className="py-8 px-4 sm:px-6 lg:px-8">
+            {renderContent()}
+          </main>
+          <Chatbot />
+        </div>
+      } />
+    </Routes>
   );
 }
 

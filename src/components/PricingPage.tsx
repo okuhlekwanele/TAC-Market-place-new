@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Check, Zap, Crown, CreditCard, Shield, Users, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { stripeProducts } from '../stripe-config';
 import { StripeCheckout } from './StripeCheckout';
 import { SubscriptionStatus } from './SubscriptionStatus';
@@ -13,6 +14,7 @@ export function PricingPage() {
   const [activeTab, setActiveTab] = useState<'plans' | 'subscription' | 'orders'>('plans');
   const { user } = useAuth();
   const { isSubscriptionActive } = useStripe();
+  const navigate = useNavigate();
 
   const handleSelectPlan = (product: typeof stripeProducts[0]) => {
     setSelectedProduct(product);

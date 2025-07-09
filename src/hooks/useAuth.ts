@@ -115,6 +115,34 @@ export function useAuth() {
     }
   };
 
+  const linkProviderAccount = async (providerId: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ provider_id: providerId })
+        .eq('id', user.id);
+
+      if (!error) {
+        const updatedUser = { ...user, providerId };
+        setUser(updatedUser);
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      }
+    } catch (err) {
+      console.error('Error linking provider account:', err);
+    }
+  };
+
+  const getAllUsers = () => {
+    // Mock function for admin dashboard
+    return [];
+  };
+
+  const updateUserStatus = async (userId: string, isActive: boolean) => {
+    // Mock function for admin dashboard
+    console.log('Update user status:', userId, isActive);
+  };
   const requestPasswordReset = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     return error ? { success: false, error: error.message } : { success: true };
@@ -123,10 +151,14 @@ export function useAuth() {
   return {
     user,
     isLoading,
+    error,
     login,
     register,
     logout,
     updateUser,
+    linkProviderAccount,
+    getAllUsers,
+    updateUserStatus,
     requestPasswordReset,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',

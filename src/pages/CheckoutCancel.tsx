@@ -1,18 +1,20 @@
 import React from 'react';
 import { XCircle, ArrowLeft, CreditCard, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function CheckoutCancel() {
+  const navigate = useNavigate();
+
   const goBack = () => {
-    window.history.back();
+    navigate(-1);
   };
 
   const goHome = () => {
-    window.location.href = '/';
+    navigate('/');
   };
 
   const tryAgain = () => {
-    // Navigate back to checkout or pricing page
-    window.location.href = '/pricing';
+    navigate('/pricing');
   };
 
   return (

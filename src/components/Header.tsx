@@ -20,7 +20,8 @@ export function Header() {
   };
 
   const handlePricingClick = () => {
-    window.location.href = '/pricing';
+    // Use React Router navigation instead of window.location
+    setActiveTab('pricing');
   };
 
   return (

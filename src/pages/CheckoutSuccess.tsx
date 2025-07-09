@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, ArrowRight, Home, Receipt } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { createClient } from '@supabase/supabase-js';
 
@@ -13,6 +14,7 @@ export function CheckoutSuccess() {
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Get session ID from URL parameters
@@ -55,12 +57,11 @@ export function CheckoutSuccess() {
   };
 
   const goHome = () => {
-    window.location.href = '/';
+    navigate('/');
   };
 
   const viewOrders = () => {
-    // Navigate to orders page (you can implement this route)
-    window.location.href = '/orders';
+    navigate('/');
   };
 
   if (loading) {
