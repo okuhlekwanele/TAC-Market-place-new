@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Phone, Lock, Eye, EyeOff, AlertCircle, CheckCircle, Send } from 'lucide-react';
+import { X, User, Mail, Phone, Lock, Eye, EyeOff, AlertCircle, CheckCircle, Send, Building2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { LoginCredentials, RegisterData } from '../types/auth';
 import { useNavigate } from 'react-router-dom';
@@ -120,7 +120,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-slate-200">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-bold text-gray-900">
             {showForgotPassword
@@ -135,7 +135,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
               resetForm();
               setShowForgotPassword(false);
             }}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -144,7 +144,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
         <div className="p-6">
           {/* Mode Switcher */}
           {!showForgotPassword && (
-            <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+            <div className="flex bg-slate-100 rounded-lg p-1 mb-6">
               <button
                 onClick={() => switchMode('login')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
@@ -170,7 +170,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
               <div className="flex items-center space-x-2">
                 <AlertCircle className="w-5 h-5 text-red-500" />
                 <p className="text-red-800 text-sm font-medium">{error}</p>
@@ -180,7 +180,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
 
           {/* Success Message */}
           {success && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
               <div className="flex items-center space-x-2">
                 <CheckCircle className="w-5 h-5 text-green-500" />
                 <p className="text-green-800 text-sm font-medium">{success}</p>
@@ -203,7 +203,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                   onChange={(e) =>
                     setLoginData((prev) => ({ ...prev, email: e.target.value }))
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
                   placeholder="Enter your email"
                 />
               </div>
@@ -221,13 +221,13 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                     onChange={(e) =>
                       setLoginData((prev) => ({ ...prev, password: e.target.value }))
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent pr-12 transition-all"
                     placeholder="Enter your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? (
@@ -256,7 +256,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-slate-600 to-slate-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-slate-700 hover:to-slate-600 transition-all disabled:opacity-50"
               >
                 {loading ? 'Signing In...' : 'Sign In'}
               </button>
@@ -278,7 +278,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                   onChange={(e) =>
                     setRegisterData((prev) => ({ ...prev, name: e.target.value }))
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -295,7 +295,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                   onChange={(e) =>
                     setRegisterData((prev) => ({ ...prev, email: e.target.value }))
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
                   placeholder="Enter your email"
                 />
               </div>
@@ -311,7 +311,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                   onChange={(e) =>
                     setRegisterData((prev) => ({ ...prev, phone: e.target.value }))
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
                   placeholder="Enter your phone number"
                 />
               </div>
@@ -328,7 +328,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                       role: e.target.value as 'provider' | 'client',
                     }))
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
                 >
                   <option value="client">Client (Book Services)</option>
                   <option value="provider">Service Provider</option>
@@ -348,13 +348,13 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                     onChange={(e) =>
                       setRegisterData((prev) => ({ ...prev, password: e.target.value }))
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent pr-12 transition-all"
                     placeholder="Create a password (min 6 characters)"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? (
@@ -369,7 +369,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-green-700 hover:to-blue-700 transition-all disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-slate-600 to-slate-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-slate-700 hover:to-slate-600 transition-all disabled:opacity-50"
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
               </button>
@@ -395,7 +395,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                   required
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
                   placeholder="Enter your email"
                 />
               </div>
@@ -403,7 +403,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                className="w-full bg-gradient-to-r from-slate-600 to-slate-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-slate-700 hover:to-slate-600 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
               >
                 <Send className="w-4 h-4" />
                 <span>{loading ? 'Sending...' : 'Send Reset Instructions'}</span>
