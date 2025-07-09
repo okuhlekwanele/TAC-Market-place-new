@@ -7,6 +7,7 @@ import { AuthUser, LoginCredentials, RegisterData } from '../types/auth';
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { sendWelcomeEmail } = useEmailService();
   const { syncUserToSheets } = useGoogleSheets();
 
@@ -38,24 +39,27 @@ export function useAuth() {
         providerId: data.provider_id,
         createdAt: new Date(data.created_at),
         lastLogin: new Date(data.last_login),
-        isActive: data.is_active
+        isActive: data.is_active,
       };
       setUser(authUser);
       localStorage.setItem('currentUser', JSON.stringify(authUser));
     }
+
     setIsLoading(false);
   };
 
   const login = async (credentials: LoginCredentials) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: credentials.email,
-      password: credentials.password
+      password: credentials.password,
     });
 
     if (error || !data.user) {
+      setAuthError(error?.message || 'Login failed');
       return { success: false, error: error?.message || 'Login failed' };
     }
 
+    setAuthError(null);
     await fetchUserProfile(data.user.id);
     return { success: true };
   };
@@ -63,10 +67,11 @@ export function useAuth() {
   const register = async (data: RegisterData) => {
     const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
-      password: data.password
+      password: data.password,
     });
 
     if (error || !authData.user) {
+      setAuthError(error?.message || 'Registration failed');
       return { success: false, error: error?.message || 'Registration failed' };
     }
 
@@ -80,15 +85,16 @@ export function useAuth() {
       created_at: new Date().toISOString(),
       last_login: new Date().toISOString(),
       is_active: true,
-      provider_id: null
+      provider_id: null,
     };
 
     await supabase.from('users').insert(profile);
 
-    // Send email + sync
+    // Send welcome email and sync to Google Sheets
     sendWelcomeEmail(data.email, data.name).catch(console.warn);
     syncUserToSheets(profile).catch(console.warn);
 
+    setAuthError(null);
     await fetchUserProfile(id);
     return { success: true };
   };
@@ -117,7 +123,7 @@ export function useAuth() {
 
   const linkProviderAccount = async (providerId: string) => {
     if (!user) return;
-    
+
     try {
       const { error } = await supabase
         .from('users')
@@ -143,6 +149,7 @@ export function useAuth() {
     // Mock function for admin dashboard
     console.log('Update user status:', userId, isActive);
   };
+
   const requestPasswordReset = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     return error ? { success: false, error: error.message } : { success: true };
@@ -151,7 +158,7 @@ export function useAuth() {
   return {
     user,
     isLoading,
-    error,
+    authError, // Optional error for use in UI
     login,
     register,
     logout,
@@ -162,6 +169,6 @@ export function useAuth() {
     requestPasswordReset,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
-    isProvider: user?.role === 'provider'
+    isProvider: user?.role === 'provider',
   };
 }
