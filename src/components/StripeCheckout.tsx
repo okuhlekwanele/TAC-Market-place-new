@@ -20,20 +20,19 @@ export function StripeCheckout({ selectedProduct, onSuccess, onCancel }: StripeC
 
   const handleCheckout = async () => {
     if (!user) {
-      setError('Please sign in to continue with checkout');
+      alert('Please sign in to continue with checkout');
       return;
     }
 
     const product = stripeProducts.find(p => p.priceId === selectedProductId);
     if (!product) {
-      setError('Selected product not found');
+      alert('Selected product not found');
       return;
     }
 
     try {
       await createCheckoutSession(product.priceId, product.mode);
     } catch (err: any) {
-      // Error is handled by the hook
       console.error('Checkout failed:', err);
     }
   };
