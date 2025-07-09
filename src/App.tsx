@@ -34,7 +34,7 @@ type Tab =
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('find');
   const { providers, loading, updateProvider, deleteProvider, generateProfile } = useServiceProviders();
-  const { user, isLoading: authLoading, isAdmin, isProvider } = useAuth();  // <-- get user here
+  const { user, isLoading: authLoading, isAdmin, isProvider } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -72,7 +72,7 @@ function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'find':
-        return <FindServices user={user} />;  // <-- pass user prop here
+        return <FindServices />;
       case 'create':
         return <ProfileForm onSubmit={handleFormSubmit} loading={loading} />;
       case 'manage':
@@ -90,24 +90,33 @@ function App() {
       case 'analytics':
         return <Analytics providers={providers} />;
       case 'admin':
-        return isAdmin ? <AdminDashboard /> : <FindServices user={user} />;
+        return isAdmin ? <AdminDashboard /> : <FindServices />;
       case 'provider':
-        return isProvider ? <ProviderDashboard /> : <FindServices user={user} />;
+        return isProvider ? <ProviderDashboard /> : <FindServices />;
       case 'pricing':
         return <PricingPage />;
       case 'engagement':
         return <EngagementDashboard />;
       default:
-        return <FindServices user={user} />;
+        return <FindServices />;
     }
   };
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-slate-600 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-          <p className="text-gray-600 text-lg">Loading TAC Market Place...</p>
+          <div className="relative w-20 h-20 mx-auto mb-8">
+            <div className="absolute inset-0 border-4 border-indigo-200 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="absolute inset-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
+              <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+            Loading TAC Market Place
+          </h2>
+          <p className="text-gray-600 text-lg">Connecting you to amazing services...</p>
         </div>
       </div>
     );
@@ -120,10 +129,12 @@ function App() {
       <Route
         path="/*"
         element={
-          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50">
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
             <Header />
             <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
-            <main className="py-8 px-4 sm:px-6 lg:px-8">{renderContent()}</main>
+            <main className="relative">
+              {renderContent()}
+            </main>
             <Chatbot />
           </div>
         }

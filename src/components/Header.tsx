@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Sparkles, User, LogOut, Settings, Shield, CreditCard, Building2 } from 'lucide-react';
+import { Sparkles, User, LogOut, Settings, Shield, CreditCard, Building2, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { AuthModal } from './AuthModal';
 
 export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { user, logout, isAuthenticated, isAdmin, isProvider } = useAuth();
   const navigate = useNavigate();
 
@@ -16,9 +17,9 @@ export function Header() {
   };
 
   const getRoleColor = () => {
-    if (isAdmin) return 'bg-red-100 text-red-800';
-    if (isProvider) return 'bg-green-100 text-green-800';
-    return 'bg-blue-100 text-blue-800';
+    if (isAdmin) return 'bg-gradient-to-r from-red-500 to-pink-500 text-white';
+    if (isProvider) return 'bg-gradient-to-r from-green-500 to-emerald-500 text-white';
+    return 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white';
   };
 
   const handlePricingClick = () => {
@@ -27,89 +28,169 @@ export function Header() {
 
   return (
     <>
-      <header className="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 text-white shadow-xl border-b border-slate-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white shadow-2xl border-b border-purple-700/50 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="flex items-center justify-between h-20">
+            {/* Logo Section */}
             <div className="flex items-center space-x-4">
-              <div className="flex items-center justify-center w-16 h-16 bg-white/15 rounded-xl p-2 backdrop-blur-sm border border-white/20">
-                <img 
-                  src="/Flat Vector Logo TAC Market Place.png" 
-                  alt="TAC Market Place Logo" 
-                  className="w-full h-full object-contain"
-                />
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-violet-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                <div className="relative flex items-center justify-center w-16 h-16 bg-gradient-to-br from-white/20 to-white/10 rounded-2xl backdrop-blur-sm border border-white/30 shadow-xl">
+                  <Building2 className="w-8 h-8 text-white" />
+                </div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">TAC Market Place</h1>
-                <p className="text-sm text-slate-200 font-medium">Professional Service Marketplace</p>
+                <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+                  TAC Market Place
+                </h1>
+                <p className="text-sm text-purple-200 font-medium">Professional Service Marketplace</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2 text-sm bg-white/10 px-3 py-2 rounded-lg backdrop-blur-sm">
-                <Sparkles className="w-4 h-4 text-yellow-300" />
-                <span className="hidden sm:inline font-medium text-slate-100">Powered by AI</span>
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center space-x-6">
+              <div className="flex items-center space-x-2 text-sm bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm border border-white/20">
+                <Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
+                <span className="font-medium text-purple-100">AI-Powered Platform</span>
               </div>
               
               {/* Pricing Button */}
               <button
                 onClick={handlePricingClick}
-                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-all text-sm font-semibold shadow-md"
+                className="relative group overflow-hidden bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 px-6 py-3 rounded-full transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
               >
-                <CreditCard className="w-4 h-4" />
-                <span>Pricing</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative flex items-center space-x-2">
+                  <CreditCard className="w-4 h-4" />
+                  <span>Pricing Plans</span>
+                </div>
               </button>
               
+              {/* User Section */}
               {isAuthenticated ? (
                 <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-3 bg-slate-600/50 px-4 py-2 rounded-lg backdrop-blur-sm border border-slate-500">
-                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                      {isAdmin ? (
-                        <Shield className="w-4 h-4" />
-                      ) : (
-                        <User className="w-4 h-4" />
-                      )}
+                  <div className="flex items-center space-x-3 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm border border-white/20">
+                    <div className="relative">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getRoleColor()} shadow-lg`}>
+                        {isAdmin ? (
+                          <Shield className="w-5 h-5" />
+                        ) : (
+                          <User className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
                     </div>
                     <div className="text-left">
-                      <div className="text-sm font-medium">{user?.name}</div>
-                      <div className={`text-xs px-2 py-0.5 rounded-full font-medium bg-slate-500 text-slate-100`}>
+                      <div className="text-sm font-medium text-white">{user?.name}</div>
+                      <div className="text-xs text-purple-200">
                         {getRoleDisplay()}
                       </div>
                     </div>
                   </div>
                   
-                  {isProvider && (
+                  <div className="flex items-center space-x-2">
+                    {isProvider && (
+                      <button
+                        onClick={() => {/* Navigate to provider dashboard */}}
+                        className="p-2 hover:bg-white/10 rounded-full transition-colors duration-200"
+                        title="Provider Settings"
+                      >
+                        <Settings className="w-5 h-5" />
+                      </button>
+                    )}
+                    
                     <button
-                      onClick={() => {/* Navigate to provider dashboard */}}
-                      className="p-2 hover:bg-slate-600 rounded-lg transition-colors"
-                      title="Provider Settings"
+                      onClick={logout}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors duration-200"
+                      title="Sign Out"
                     >
-                      <Settings className="w-5 h-5" />
+                      <LogOut className="w-5 h-5" />
                     </button>
-                  )}
-                  
-                  <button
-                    onClick={logout}
-                    className="p-2 hover:bg-slate-600 rounded-lg transition-colors"
-                    title="Sign Out"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </button>
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
                   <button
                     onClick={() => setShowAuthModal(true)}
-                    className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg transition-all text-sm font-semibold shadow-md"
+                    className="relative group overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 px-6 py-3 rounded-full transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
-                    Sign In
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative flex items-center space-x-2">
+                      <User className="w-4 h-4" />
+                      <span>Get Started</span>
+                    </div>
                   </button>
-                  <div className="text-xs text-slate-300 bg-slate-600/50 px-3 py-1 rounded-lg backdrop-blur-sm border border-slate-500">
-                    Admin Login Available
+                  <div className="text-xs text-purple-200 bg-white/10 px-3 py-2 rounded-full backdrop-blur-sm border border-white/20">
+                    <span className="flex items-center space-x-1">
+                      <Shield className="w-3 h-3" />
+                      <span>Admin Access Available</span>
+                    </span>
                   </div>
                 </div>
               )}
             </div>
+
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden">
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                {showMobileMenu ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
+              </button>
+            </div>
           </div>
+
+          {/* Mobile Menu */}
+          {showMobileMenu && (
+            <div className="lg:hidden absolute top-full left-0 right-0 bg-gradient-to-b from-indigo-900 to-purple-900 border-t border-purple-700/50 shadow-2xl z-50">
+              <div className="px-4 py-6 space-y-4">
+                <button
+                  onClick={handlePricingClick}
+                  className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Pricing Plans</span>
+                </button>
+                
+                {isAuthenticated ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3 p-3 bg-white/10 rounded-lg">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getRoleColor()}`}>
+                        {isAdmin ? <Shield className="w-5 h-5" /> : <User className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium">{user?.name}</div>
+                        <div className="text-xs text-purple-200">{getRoleDisplay()}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={logout}
+                      className="w-full bg-red-500/20 text-red-200 px-4 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Get Started</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </header>
       
