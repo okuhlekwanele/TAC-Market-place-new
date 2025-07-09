@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, Users, BarChart, Search, Database, Share2, Shield, Settings, CreditCard, MessageCircle, TrendingUp } from 'lucide-react';
+import { PlusCircle, Users, BarChart, Search, Database, Share2, Shield, Settings, CreditCard, TrendingUp } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface NavigationProps {
@@ -40,7 +40,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
   }
 
   return (
-    <nav className="bg-white border-b border-gray-200 shadow-sm">
+    <nav className="bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex space-x-8 overflow-x-auto">
           {tabs.map(tab => (
@@ -50,13 +50,13 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
               className={`flex items-center space-x-2 py-4 px-1 border-b-3 font-medium text-sm transition-all whitespace-nowrap ${
                 activeTab === tab.id
                   ? tab.id === 'admin' 
-                    ? 'border-red-500 text-red-600 bg-red-50/50'
+                    ? 'border-red-600 text-red-700 bg-red-50'
                     : tab.id === 'provider'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50/50'
+                    ? 'border-blue-600 text-blue-700 bg-blue-50'
                     : tab.id === 'pricing'
-                    ? 'border-purple-500 text-purple-600 bg-purple-50/50'
-                    : 'border-teal-500 text-teal-600 bg-teal-50/50'
-                  : 'border-transparent text-gray-500 hover:text-teal-600 hover:border-teal-300'
+                    ? 'border-indigo-600 text-indigo-700 bg-indigo-50'
+                    : 'border-slate-600 text-slate-700 bg-slate-50'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-400'
               }`}
             >
               <tab.icon className="w-5 h-5" />
@@ -67,7 +67,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
                 </span>
               )}
               {tab.id === 'provider' && isProvider && (
-                <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs font-medium">
+                <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">
                   Provider
                 </span>
               )}

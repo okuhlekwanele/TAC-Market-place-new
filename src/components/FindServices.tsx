@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, MapPin, Filter, Calendar, Star, Phone, Mail, MessageCircle, Bot } from 'lucide-react';
+import { Search, MapPin, Filter, Calendar, Star, Phone, Mail, MessageCircle, Bot, Building2 } from 'lucide-react';
 import { ServiceProvider } from '../types';
 import { useServiceProviders } from '../hooks/useServiceProviders';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
@@ -50,11 +50,11 @@ export function FindServices() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+      <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">Find Services</h2>
-            <p className="text-gray-600 mt-2 text-lg">Discover local service providers on TAC Market Place</p>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-700 to-slate-600 bg-clip-text text-transparent">Find Services</h2>
+            <p className="text-slate-600 mt-2 text-lg">Discover local service providers on TAC Market Place</p>
             <div className="flex items-center space-x-2 mt-3">
               <Bot className="w-4 h-4 text-blue-500" />
               <p className="text-sm text-blue-600">Need help finding services? Try our AI assistant in the bottom right!</p>
@@ -66,8 +66,8 @@ export function FindServices() {
               onClick={() => setShowMap(!showMap)}
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all font-medium ${
                 showMap
-                  ? 'bg-gradient-to-r from-teal-500 to-blue-500 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-600'
+                  ? 'bg-gradient-to-r from-slate-600 to-slate-500 text-white shadow-lg'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
               <MapPin className="w-5 h-5" />
@@ -79,22 +79,22 @@ export function FindServices() {
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Search providers or services..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 bg-gray-50 focus:bg-white"
+              className="w-full pl-12 pr-4 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 bg-slate-50 focus:bg-white transition-all"
             />
           </div>
 
           <div className="relative">
-            <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
             <select
               value={selectedService}
               onChange={(e) => setSelectedService(e.target.value)}
-              className="w-full pl-12 pr-8 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 appearance-none bg-gray-50 focus:bg-white"
+              className="w-full pl-12 pr-8 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 appearance-none bg-slate-50 focus:bg-white transition-all"
             >
               <option value="">All Services</option>
               {services.map(service => (
@@ -104,7 +104,7 @@ export function FindServices() {
           </div>
 
           <div className="relative">
-            <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Enter your location..."
@@ -113,7 +113,7 @@ export function FindServices() {
                   handleLocationSearch(e.currentTarget.value);
                 }
               }}
-              className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 transition-all bg-gray-50 focus:bg-white"
+              className="w-full pl-12 pr-4 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 transition-all bg-slate-50 focus:bg-white"
             />
           </div>
         </div>
@@ -121,7 +121,7 @@ export function FindServices() {
 
       {/* Map View */}
       {showMap && (
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
           <MapView
             providers={nearbyProviders}
             center={userLocation || undefined}
@@ -133,11 +133,11 @@ export function FindServices() {
       {/* Results */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {nearbyProviders.map(provider => (
-          <div key={provider.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-100 overflow-hidden group">
+          <div key={provider.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all border border-slate-200 overflow-hidden group">
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-14 h-14 bg-gradient-to-r from-teal-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-14 h-14 bg-gradient-to-r from-slate-600 to-slate-500 rounded-xl flex items-center justify-center shadow-lg">
                     <span className="text-white font-bold text-lg">
                       {provider.fullName.charAt(0)}
                     </span>
@@ -148,7 +148,7 @@ export function FindServices() {
                         ? provider.businessInfo.businessName
                         : provider.fullName}
                     </h3>
-                    <p className="text-sm text-teal-600 font-medium">{provider.service}</p>
+                    <p className="text-sm text-slate-600 font-medium">{provider.service}</p>
                     <div className="flex items-center space-x-1 mt-1">
                       <Star className="w-4 h-4 text-yellow-400 fill-current" />
                       <span className="text-sm text-gray-600">4.8 (24 reviews)</span>
@@ -158,11 +158,11 @@ export function FindServices() {
               </div>
 
               <div className="space-y-3 mb-4">
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <MapPin className="w-4 h-4 text-teal-500" />
+                <div className="flex items-center space-x-2 text-sm text-slate-600">
+                  <MapPin className="w-4 h-4 text-slate-500" />
                   <span>{provider.location}</span>
                 </div>
-                <div className="text-xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
+                <div className="text-xl font-bold bg-gradient-to-r from-slate-700 to-slate-600 bg-clip-text text-transparent">
                   From R{provider.suggestedPrice}
                 </div>
               </div>
@@ -174,7 +174,7 @@ export function FindServices() {
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setBookingProvider(provider)}
-                  className="flex-1 bg-gradient-to-r from-teal-500 to-blue-500 text-white font-semibold py-3 px-4 rounded-xl hover:from-teal-600 hover:to-blue-600 transition-all flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50"
+                  className="flex-1 bg-gradient-to-r from-slate-600 to-slate-500 text-white font-semibold py-3 px-4 rounded-xl hover:from-slate-700 hover:to-slate-600 transition-all flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50"
                   disabled={!user}
                 >
                   <Calendar className="w-4 h-4" />
@@ -222,8 +222,8 @@ export function FindServices() {
 
       {nearbyProviders.length === 0 && (
         <div className="text-center py-16">
-          <div className="w-20 h-20 bg-gradient-to-r from-teal-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Search className="w-10 h-10 text-teal-500" />
+          <div className="w-20 h-20 bg-gradient-to-r from-slate-100 to-slate-200 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Search className="w-10 h-10 text-slate-500" />
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-3">No services found</h3>
           <p className="text-gray-600">Try adjusting your search criteria or location</p>

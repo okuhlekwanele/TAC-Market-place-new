@@ -104,9 +104,9 @@ function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
+          <div className="w-12 h-12 border-4 border-slate-600 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
           <p className="text-gray-600 text-lg">Loading TAC Market Place...</p>
         </div>
       </div>
@@ -120,7 +120,7 @@ function App() {
       <Route
         path="/*"
         element={
-          <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-orange-50">
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50">
             <Header />
             <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
             <main className="py-8 px-4 sm:px-6 lg:px-8">{renderContent()}</main>

@@ -97,16 +97,16 @@ export function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-orange-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-6">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 bg-gradient-to-r from-slate-600 to-slate-500 rounded-2xl flex items-center justify-center shadow-lg">
               <CreditCard className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-700 to-slate-600 bg-clip-text text-transparent">
                 TAC Marketplace
               </h1>
               <p className="text-gray-600">Professional Service Platform</p>
@@ -117,7 +117,7 @@ export function PricingPage() {
         {/* Tabs */}
         {user && (
           <div className="flex justify-center mb-8">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-2">
+            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-2">
               <div className="flex space-x-2">
                 {[
                   { id: 'plans', label: 'Plans & Pricing', icon: CreditCard },
@@ -129,7 +129,7 @@ export function PricingPage() {
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all ${
                       activeTab === tab.id
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                        ? 'bg-gradient-to-r from-slate-600 to-slate-500 text-white shadow-lg'
                         : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                     }`}
                   >
@@ -157,16 +157,16 @@ export function PricingPage() {
               {visibleProducts.map((product, index) => (
                 <div
                   key={product.priceId}
-                  className={`bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden transform hover:scale-105 transition-all duration-300 ${
+                  className={`bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden transform hover:scale-105 transition-all duration-300 ${
                     product.name.toLowerCase() === 'subscription'
-                      ? 'ring-2 ring-blue-500 ring-opacity-50 relative'
+                      ? 'ring-2 ring-slate-500 ring-opacity-50 relative'
                       : ''
                   }`}
                 >
                   {/* Badge */}
                   {product.name.toLowerCase() === 'subscription' && (
                     <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                      <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                      <div className="bg-gradient-to-r from-slate-600 to-slate-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
                         Most Popular
                       </div>
                     </div>
@@ -174,7 +174,7 @@ export function PricingPage() {
 
                   <div className="p-8">
                     <div
-                      className={`w-16 h-16 bg-gradient-to-r ${getProductColor(product.name)} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}
+                      className={`w-16 h-16 bg-gradient-to-r from-slate-600 to-slate-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg`}
                     >
                       <div className="text-white">{getProductIcon(product.name)}</div>
                     </div>
@@ -209,8 +209,8 @@ export function PricingPage() {
                       disabled={!user || (isSubscriptionActive() && product.mode === 'subscription')}
                       className={`w-full py-4 px-6 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         product.name.toLowerCase() === 'subscription'
-                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg'
-                          : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                          ? 'bg-gradient-to-r from-slate-600 to-slate-500 text-white hover:from-slate-700 hover:to-slate-600 shadow-lg'
+                          : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
                       }`}
                     >
                       {!user
