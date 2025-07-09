@@ -34,7 +34,7 @@ type Tab =
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('find');
   const { providers, loading, updateProvider, deleteProvider, generateProfile } = useServiceProviders();
-  const { isLoading: authLoading, isAdmin, isProvider } = useAuth();
+  const { user, isLoading: authLoading, isAdmin, isProvider } = useAuth();  // <-- get user here
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -72,7 +72,7 @@ function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'find':
-        return <FindServices />;
+        return <FindServices user={user} />;  // <-- pass user prop here
       case 'create':
         return <ProfileForm onSubmit={handleFormSubmit} loading={loading} />;
       case 'manage':
@@ -90,15 +90,15 @@ function App() {
       case 'analytics':
         return <Analytics providers={providers} />;
       case 'admin':
-        return isAdmin ? <AdminDashboard /> : <FindServices />;
+        return isAdmin ? <AdminDashboard /> : <FindServices user={user} />;
       case 'provider':
-        return isProvider ? <ProviderDashboard /> : <FindServices />;
+        return isProvider ? <ProviderDashboard /> : <FindServices user={user} />;
       case 'pricing':
         return <PricingPage />;
       case 'engagement':
         return <EngagementDashboard />;
       default:
-        return <FindServices />;
+        return <FindServices user={user} />;
     }
   };
 
