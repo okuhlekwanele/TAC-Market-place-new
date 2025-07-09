@@ -17,7 +17,7 @@ export function FindServices() {
 
   const { providers, findNearbyProviders } = useServiceProviders();
   const { geocodeAddress } = useGoogleMaps();
-  const { user } = useAuth(); // ✅ Fix: define user
+  const { user } = useAuth();
 
   const services = [
     'Plumbing', 'Electrical Work', 'Carpentry', 'Painting', 'Gardening',
@@ -111,3 +111,133 @@ export function FindServices() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleLocationSearch(e.currentTarget.value);
+                }
+              }}
+              className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 transition-all bg-gray-50 focus:bg-white"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Map View */}
+      {showMap && (
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <MapView
+            providers={nearbyProviders}
+            center={userLocation || undefined}
+            onProviderSelect={setSelectedProvider}
+          />
+        </div>
+      )}
+
+      {/* Results */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {nearbyProviders.map(provider => (
+          <div key={provider.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-100 overflow-hidden group">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-14 h-14 bg-gradient-to-r from-teal-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-white font-bold text-lg">
+                      {provider.fullName.charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">
+                      {provider.isBusinessOwner && provider.businessInfo
+                        ? provider.businessInfo.businessName
+                        : provider.fullName}
+                    </h3>
+                    <p className="text-sm text-teal-600 font-medium">{provider.service}</p>
+                    <div className="flex items-center space-x-1 mt-1">
+                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                      <span className="text-sm text-gray-600">4.8 (24 reviews)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <MapPin className="w-4 h-4 text-teal-500" />
+                  <span>{provider.location}</span>
+                </div>
+                <div className="text-xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
+                  From R{provider.suggestedPrice}
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-6 line-clamp-2">
+                {provider.generatedBio}
+              </p>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setBookingProvider(provider)}
+                  className="flex-1 bg-gradient-to-r from-teal-500 to-blue-500 text-white font-semibold py-3 px-4 rounded-xl hover:from-teal-600 hover:to-blue-600 transition-all flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50"
+                  disabled={!user}
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>{user ? 'Book Now' : 'Sign In to Book'}</span>
+                </button>
+
+                <div className="flex space-x-2">
+                  {provider.contactDetails?.phone && (
+                    <a
+                      href={`tel:${provider.contactDetails.phone}`}
+                      className="p-3 bg-green-100 text-green-600 rounded-xl hover:bg-green-200 transition-colors"
+                      title="Call"
+                    >
+                      <Phone className="w-4 h-4" />
+                    </a>
+                  )}
+
+                  {provider.contactDetails?.whatsapp && (
+                    <a
+                      href={`https://wa.me/${provider.contactDetails.whatsapp.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 bg-green-100 text-green-600 rounded-xl hover:bg-green-200 transition-colors"
+                      title="WhatsApp"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                    </a>
+                  )}
+
+                  {provider.contactDetails?.email && (
+                    <a
+                      href={`mailto:${provider.contactDetails.email}`}
+                      className="p-3 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 transition-colors"
+                      title="Email"
+                    >
+                      <Mail className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {nearbyProviders.length === 0 && (
+        <div className="text-center py-16">
+          <div className="w-20 h-20 bg-gradient-to-r from-teal-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Search className="w-10 h-10 text-teal-500" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-3">No services found</h3>
+          <p className="text-gray-600">Try adjusting your search criteria or location</p>
+        </div>
+      )}
+
+      {/* Booking Modal */}
+      {bookingProvider && (
+        <BookingModal
+          isOpen={!!bookingProvider}
+          onClose={() => setBookingProvider(null)}
+          provider={bookingProvider}
+        />
+      )}
+    </div>
+  );
+}
