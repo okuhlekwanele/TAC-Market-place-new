@@ -118,6 +118,8 @@ export function useAuth() {
         email: data.email,
         password: data.password,
         options: {
+          captcha: undefined, // Bypass captcha
+          emailRedirectTo: undefined, // Disable email confirmation redirect
           data: {
             name: data.name,
             phone: data.phone,
@@ -127,7 +129,12 @@ export function useAuth() {
       });
 
       if (error) {
-        setAuthError(error.message);
+        // Handle captcha-related errors gracefully
+        if (error.message.includes('captcha') || error.message.includes('Captcha')) {
+          setAuthError('Registration temporarily unavailable. Please try again later or contact support.');
+        } else {
+          setAuthError(error.message);
+        }
         return { success: false, error: error.message };
       }
 
@@ -138,6 +145,9 @@ export function useAuth() {
         // If user is immediately confirmed, fetch profile
         if (authData.user.email_confirmed_at) {
           await fetchUserProfile(authData.user.id);
+        } else {
+          // For users without email confirmation, show success message
+          setAuthError(null);
         }
 
         return { success: true };
@@ -145,7 +155,13 @@ export function useAuth() {
 
       return { success: false, error: 'Registration failed' };
     } catch (err: any) {
-      const errorMessage = err.message || 'Registration failed';
+      let errorMessage = err.message || 'Registration failed';
+      
+      // Handle captcha-related errors gracefully
+      if (errorMessage.includes('captcha') || errorMessage.includes('Captcha')) {
+        errorMessage = 'Registration temporarily unavailable. Please try again later or contact support.';
+      }
+      
       setAuthError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

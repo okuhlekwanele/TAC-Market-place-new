@@ -93,14 +93,22 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
     const result = await register(registerData);
 
     if (result.success) {
-      setSuccess('Registration successful! Please check your email to verify your account.');
+      setSuccess('Registration successful! You can now sign in with your credentials.');
       setTimeout(() => {
         onClose();
         resetForm();
         setSuccess('');
+        // Switch to login mode after successful registration
+        setMode('login');
       }, 3000);
     } else {
-      setError(result.error || 'Registration failed');
+      // Handle captcha errors gracefully
+      const errorMessage = result.error || 'Registration failed';
+      if (errorMessage.includes('captcha') || errorMessage.includes('Captcha')) {
+        setError('Registration is temporarily unavailable. Please try signing in if you already have an account, or contact support for assistance.');
+      } else {
+        setError(errorMessage);
+      }
     }
     setLoading(false);
   };

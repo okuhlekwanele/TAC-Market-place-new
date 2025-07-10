@@ -29,9 +29,9 @@ export function BookingModal({ isOpen, onClose, provider }: BookingModalProps) {
     if (user) {
       setClientInfo(prev => ({
         ...prev,
-        name: user.name,
-        phone: user.phone,
-        email: user.email
+        name: user.name || '',
+        phone: user.phone || '',
+        email: user.email || ''
       }));
     }
   }, [user]);
@@ -42,6 +42,15 @@ export function BookingModal({ isOpen, onClose, provider }: BookingModalProps) {
       setBookingSuccess(false);
       setBookingError('');
       setSelectedSlot(null);
+      // Don't reset form if user is logged in
+      if (!user) {
+        setClientInfo({
+          name: '',
+          phone: '',
+          email: '',
+          notes: ''
+        });
+      }
     }
   }, [isOpen]);
 
@@ -58,6 +67,13 @@ export function BookingModal({ isOpen, onClose, provider }: BookingModalProps) {
 
     if (!clientInfo.name || !clientInfo.phone || !clientInfo.email) {
       setBookingError('Please fill in all required fields');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(clientInfo.email)) {
+      setBookingError('Please enter a valid email address');
       return;
     }
 
@@ -113,6 +129,13 @@ export function BookingModal({ isOpen, onClose, provider }: BookingModalProps) {
               <p><strong>Estimated Cost:</strong> R{provider.suggestedPrice}</p>
             </div>
           </div>
+          {!user && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-blue-800">
+                💡 <strong>Tip:</strong> Create an account to easily manage your bookings and get faster service!
+              </p>
+            </div>
+          )}
           <button
             onClick={onClose}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
@@ -131,6 +154,9 @@ export function BookingModal({ isOpen, onClose, provider }: BookingModalProps) {
           <div>
             <h2 className="text-xl font-bold text-gray-900">Book Appointment</h2>
             <p className="text-gray-600">{provider.fullName} - {provider.service}</p>
+            {!user && (
+              <p className="text-sm text-blue-600 mt-1">✨ No account required - book instantly!</p>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -147,6 +173,18 @@ export function BookingModal({ isOpen, onClose, provider }: BookingModalProps) {
               <div className="flex items-center space-x-2">
                 <AlertCircle className="w-5 h-5 text-red-500" />
                 <p className="text-red-800 text-sm font-medium">{bookingError}</p>
+              </div>
+            </div>
+          )}
+
+          {!user && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <div>
+                  <p className="text-green-800 text-sm font-medium">Guest Booking Enabled</p>
+                  <p className="text-green-700 text-xs mt-1">You can book without creating an account. We'll contact you via the details you provide.</p>
+                </div>
               </div>
             </div>
           )}
@@ -260,7 +298,7 @@ export function BookingModal({ isOpen, onClose, provider }: BookingModalProps) {
             </div>
             <button
               type="submit"
-              disabled={!selectedSlot || isSubmitting || loading}
+              disabled={!selectedSlot || isSubmitting || loading || !clientInfo.name || !clientInfo.phone || !clientInfo.email}
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting || loading ? (

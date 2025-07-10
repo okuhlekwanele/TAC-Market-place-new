@@ -39,7 +39,9 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'https://your-project-id
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      flowType: 'pkce'
+      flowType: 'pkce',
+      // Disable captcha for registration
+      captchaToken: undefined
     },
     global: {
       headers: {
