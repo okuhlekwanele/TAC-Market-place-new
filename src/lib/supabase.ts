@@ -5,9 +5,10 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 let supabase: any;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'https://your-project-id.supabase.co' || supabaseAnonKey === 'your_supabase_anon_key_here') {
   console.error('Missing Supabase environment variables. Please check your .env file.');
-  console.error('Required variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY');
+  console.error('Required variables: VITE_SUPABASE_URL (must be a valid URL), VITE_SUPABASE_ANON_KEY');
+  console.error('Current VITE_SUPABASE_URL:', supabaseUrl);
   
   // Create a mock client to prevent app crashes
   const mockClient = {
