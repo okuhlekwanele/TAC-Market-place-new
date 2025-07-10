@@ -34,7 +34,7 @@ type Tab =
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('find');
   const { providers, loading, updateProvider, deleteProvider, generateProfile } = useServiceProviders();
-  const { user, isLoading: authLoading, isAdmin, isProvider } = useAuth();
+  const { user, isLoading: authLoading, isAdmin, isProvider, authError } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
