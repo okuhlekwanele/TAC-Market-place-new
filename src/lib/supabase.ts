@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+let supabase: any;
+
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables. Please check your .env file.');
   console.error('Required variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY');
@@ -26,12 +28,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   };
   
   // @ts-ignore - Mock client for development
-  export const supabase = mockClient;
+  supabase = mockClient;
 } else {
   // Ensure the URL is properly formatted
   const formattedUrl = supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl;
 
-  export const supabase = createClient(formattedUrl, supabaseAnonKey, {
+  supabase = createClient(formattedUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
@@ -53,3 +55,5 @@ if (!supabaseUrl || !supabaseAnonKey) {
     },
   });
 }
+
+export { supabase };
