@@ -8,4 +8,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: false,
     autoRefreshToken: false,
   },
+  const { data, error } = await supabase.auth.signUp({
+  email: 'user@example.com',
+  password: '12345678'
+});
+
+if (error) {
+  console.error('Signup error:', error.message);
+} else {
+  console.log('Signup success:', data);
+}
 });
