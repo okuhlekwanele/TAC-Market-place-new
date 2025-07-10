@@ -580,6 +580,77 @@ export function useGoogleSheets() {
     return successCount;
   };
 
+  const syncUserToSheets = async (user: any): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (!isGoogleSheetsConfigured()) {
+        console.log('Google Sheets not configured, skipping user sync');
+        return false;
+      }
+
+      const headers = [
+        'ID', 'Name', 'Email', 'Phone', 'Role', 'Provider ID', 
+        'Created At', 'Last Login', 'Is Active'
+      ];
+
+      await ensureSheetExists('Users', headers);
+
+      const values = [
+        user.id,
+        user.name,
+        user.email,
+        user.phone || '',
+        user.role,
+        user.providerId || '',
+        user.createdAt?.toISOString() || new Date().toISOString(),
+        user.lastLogin?.toISOString() || new Date().toISOString(),
+        user.isActive ? 'Yes' : 'No'
+      ];
+
+      // Check if user already exists
+      const existingData = await window.gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `'Users'!A:A`,
+      });
+
+      const existingIds = existingData.result.values?.slice(1).map((row: any) => row[0]) || [];
+      const existingIndex = existingIds.indexOf(user.id);
+
+      if (existingIndex >= 0) {
+        // Update existing row
+        const rowNumber = existingIndex + 2;
+        await window.gapi.client.sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEET_ID,
+          range: `'Users'!A${rowNumber}:${String.fromCharCode(64 + headers.length)}${rowNumber}`,
+          valueInputOption: 'RAW',
+          resource: {
+            values: [values]
+          }
+        });
+      } else {
+        // Append new row
+        await window.gapi.client.sheets.spreadsheets.values.append({
+          spreadsheetId: SPREADSHEET_ID,
+          range: `'Users'!A:${String.fromCharCode(64 + headers.length)}`,
+          valueInputOption: 'RAW',
+          insertDataOption: 'INSERT_ROWS',
+          resource: {
+            values: [values]
+          }
+        });
+      }
+
+      return true;
+    } catch (err: any) {
+      console.error('Google Sheets user sync error:', err);
+      setError('Google Sheets user sync failed. User data saved locally.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
   return {
     syncLocalProfileToSheets,
     syncServiceProviderToSheets,
@@ -587,6 +658,7 @@ export function useGoogleSheets() {
     updateAnalytics,
     batchSyncLocalProfiles,
     batchSyncServiceProviders,
+    syncUserToSheets,
     setupAllSheets,
     signIn,
     isSignedIn,

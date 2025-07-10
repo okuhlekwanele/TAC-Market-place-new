@@ -64,7 +64,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
         onClose();
         resetForm();
         setSuccess('');
-        navigate('/dashboard'); // Redirect after login
+        navigate('/'); // Redirect after login
       }, 1000);
     } else {
       setError(result.error || 'Login failed');
@@ -84,16 +84,21 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
       return;
     }
 
+    if (!registerData.name.trim()) {
+      setError('Full name is required');
+      setLoading(false);
+      return;
+    }
+
     const result = await register(registerData);
 
     if (result.success) {
-      setSuccess('Registration successful! Welcome email sent to your inbox.');
+      setSuccess('Registration successful! Please check your email to verify your account.');
       setTimeout(() => {
         onClose();
         resetForm();
         setSuccess('');
-        navigate('/dashboard'); // Redirect after registration
-      }, 1000);
+      }, 3000);
     } else {
       setError(result.error || 'Registration failed');
     }
@@ -269,7 +274,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <User className="w-4 h-4 inline mr-2" />
-                  Full Name
+                  Full Name *
                 </label>
                 <input
                   type="text"
@@ -286,7 +291,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Mail className="w-4 h-4 inline mr-2" />
-                  Email
+                  Email *
                 </label>
                 <input
                   type="email"
@@ -318,7 +323,8 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Account Type
+                  <Building2 className="w-4 h-4 inline mr-2" />
+                  Account Type *
                 </label>
                 <select
                   value={registerData.role}
@@ -338,7 +344,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Lock className="w-4 h-4 inline mr-2" />
-                  Password
+                  Password *
                 </label>
                 <div className="relative">
                   <input
@@ -364,6 +370,9 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalP
                     )}
                   </button>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Password must be at least 6 characters long
+                </p>
               </div>
 
               <button

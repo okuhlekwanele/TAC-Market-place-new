@@ -12,112 +12,182 @@ export function useAuth() {
   const { syncUserToSheets } = useGoogleSheets();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const sessionUser = data?.user;
-      if (sessionUser) {
-        fetchUserProfile(sessionUser.id);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
       } else {
         setIsLoading(false);
       }
     });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          await fetchUserProfile(session.user.id);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          localStorage.removeItem('currentUser');
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    if (data && !error) {
-      const authUser: AuthUser = {
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        phone: data.phone,
-        role: data.role,
-        providerId: data.provider_id,
-        createdAt: new Date(data.created_at),
-        lastLogin: new Date(data.last_login),
-        isActive: data.is_active,
-      };
-      setUser(authUser);
-      localStorage.setItem('currentUser', JSON.stringify(authUser));
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        setAuthError('Failed to load user profile');
+        return;
+      }
+
+      if (data) {
+        const authUser: AuthUser = {
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          phone: data.phone,
+          role: data.role,
+          providerId: data.provider_id,
+          createdAt: new Date(data.created_at),
+          lastLogin: new Date(data.last_login),
+          isActive: data.is_active,
+        };
+        setUser(authUser);
+        localStorage.setItem('currentUser', JSON.stringify(authUser));
+
+        // Update last login
+        await supabase
+          .from('users')
+          .update({ last_login: new Date().toISOString() })
+          .eq('id', userId);
+      }
+    } catch (err) {
+      console.error('Error in fetchUserProfile:', err);
+      setAuthError('Failed to load user profile');
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   const login = async (credentials: LoginCredentials) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password,
-    });
-
-    if (error || !data.user) {
-      setAuthError(error?.message || 'Login failed');
-      return { success: false, error: error?.message || 'Login failed' };
-    }
-
     setAuthError(null);
-    await fetchUserProfile(data.user.id);
-    return { success: true };
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
+
+      if (error) {
+        setAuthError(error.message);
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        await fetchUserProfile(data.user.id);
+        return { success: true };
+      }
+
+      return { success: false, error: 'Login failed' };
+    } catch (err: any) {
+      const errorMessage = err.message || 'Login failed';
+      setAuthError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const register = async (data: RegisterData) => {
-    const { data: authData, error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-    });
-
-    if (error || !authData.user) {
-      setAuthError(error?.message || 'Registration failed');
-      return { success: false, error: error?.message || 'Registration failed' };
-    }
-
-    const { id } = authData.user;
-    const profile = {
-      id,
-      email: data.email,
-      name: data.name,
-      phone: data.phone,
-      role: data.role,
-      created_at: new Date().toISOString(),
-      last_login: new Date().toISOString(),
-      is_active: true,
-      provider_id: null,
-    };
-
-    await supabase.from('users').insert(profile);
-
-    // Send welcome email and sync to Google Sheets
-    sendWelcomeEmail(data.email, data.name).catch(console.warn);
-    syncUserToSheets(profile).catch(console.warn);
-
     setAuthError(null);
-    await fetchUserProfile(id);
-    return { success: true };
+    setIsLoading(true);
+
+    try {
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+            phone: data.phone,
+            role: data.role,
+          }
+        }
+      });
+
+      if (error) {
+        setAuthError(error.message);
+        return { success: false, error: error.message };
+      }
+
+      if (authData.user) {
+        // Send welcome email (non-blocking)
+        sendWelcomeEmail(data.email, data.name).catch(console.warn);
+
+        // If user is immediately confirmed, fetch profile
+        if (authData.user.email_confirmed_at) {
+          await fetchUserProfile(authData.user.id);
+        }
+
+        return { success: true };
+      }
+
+      return { success: false, error: 'Registration failed' };
+    } catch (err: any) {
+      const errorMessage = err.message || 'Registration failed';
+      setAuthError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    localStorage.removeItem('currentUser');
-    setUser(null);
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      localStorage.removeItem('currentUser');
+    } catch (err) {
+      console.error('Error signing out:', err);
+    }
   };
 
   const updateUser = async (updates: Partial<AuthUser>) => {
     if (!user) return;
 
-    const { error } = await supabase
-      .from('users')
-      .update({ ...updates, last_login: new Date().toISOString() })
-      .eq('id', user.id);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          name: updates.name,
+          phone: updates.phone,
+          role: updates.role,
+          provider_id: updates.providerId,
+          last_login: new Date().toISOString()
+        })
+        .eq('id', user.id);
 
-    if (!error) {
-      const updatedUser = { ...user, ...updates };
-      setUser(updatedUser);
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-      syncUserToSheets(updatedUser).catch(console.warn);
+      if (!error) {
+        const updatedUser = { ...user, ...updates };
+        setUser(updatedUser);
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+        
+        // Sync to Google Sheets (non-blocking)
+        syncUserToSheets(updatedUser).catch(console.warn);
+      }
+    } catch (err) {
+      console.error('Error updating user:', err);
     }
   };
 
@@ -140,25 +210,64 @@ export function useAuth() {
     }
   };
 
-  const getAllUsers = () => {
-    // Mock function for admin dashboard
-    return [];
+  const getAllUsers = async () => {
+    if (!user || user.role !== 'admin') return [];
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching users:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (err) {
+      console.error('Error in getAllUsers:', err);
+      return [];
+    }
   };
 
   const updateUserStatus = async (userId: string, isActive: boolean) => {
-    // Mock function for admin dashboard
-    console.log('Update user status:', userId, isActive);
+    if (!user || user.role !== 'admin') return;
+
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ is_active: isActive })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error updating user status:', error);
+      }
+    } catch (err) {
+      console.error('Error in updateUserStatus:', err);
+    }
   };
 
   const requestPasswordReset = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    return error ? { success: false, error: error.message } : { success: true };
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to send reset email' };
+    }
   };
 
   return {
     user,
     isLoading,
-    authError, // Optional error for use in UI
+    authError,
     login,
     register,
     logout,
